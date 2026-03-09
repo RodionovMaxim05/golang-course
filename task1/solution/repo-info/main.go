@@ -42,7 +42,11 @@ func fetchRepoInfo(owner, repo string) (*repoInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("request error: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to close response body: %s\n", err)
+		}
+	}()
 
 	switch resp.StatusCode {
 	case http.StatusOK:
