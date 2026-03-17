@@ -1,0 +1,50 @@
+basePath: /
+definitions:
+  domain.Repository:
+    properties:
+      createdAt:
+        type: string
+      description:
+        type: string
+      forksCount:
+        type: integer
+      name:
+        type: string
+      stargazersCount:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Gateway to information about GitHub repositories
+  title: GitHub Repo API
+  version: "1.0"
+paths:
+  /api/v1/repo:
+    get:
+      description: Returns repository info by GitHub URL
+      parameters:
+      - description: GitHub repository URL (e.g. https://github.com/golang/go)
+        in: query
+        name: url
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Repository'
+        "400":
+          description: invalid request
+          schema:
+            type: string
+        "404":
+          description: repository not found
+          schema:
+            type: string
+        "500":
+          description: internal error
+          schema:
+            type: string
+      summary: Get repository info
+swagger: "2.0"

@@ -9,6 +9,8 @@ jobs:
       matrix:
         module:
           - task1/solution
+          - task2/solution/collector
+          - task2/solution/gateway
 
     steps:
       - uses: actions/checkout@v4
