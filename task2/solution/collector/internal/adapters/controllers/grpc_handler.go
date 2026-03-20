@@ -16,17 +16,17 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type RepoUsecases interface {
+type GetRepoUsecase interface {
 	Execute(owner, name string) (domain.Repository, error)
 }
 
 type RepoHandler struct {
 	pb.UnsafeRepoServiceServer
-	repoUsecases RepoUsecases
+	repoUsecase GetRepoUsecase
 }
 
-func NewRepoHandler(repoUsecases RepoUsecases) *RepoHandler {
-	return &RepoHandler{repoUsecases: repoUsecases}
+func NewRepoHandler(repoUsecase GetRepoUsecase) *RepoHandler {
+	return &RepoHandler{repoUsecase: repoUsecase}
 }
 
 func (rh *RepoHandler) GetRepo(ctx context.Context, req *pb.GetRepoRequest) (*pb.GetRepoResponse, error) {
@@ -39,7 +39,7 @@ func (rh *RepoHandler) GetRepo(ctx context.Context, req *pb.GetRepoRequest) (*pb
 			)
 	}
 
-	repo, err := rh.repoUsecases.Execute(owner, name)
+	repo, err := rh.repoUsecase.Execute(owner, name)
 	if err != nil {
 		log.Printf("execute error for %q: %v", req.Url, err)
 		return nil, mapError(err)

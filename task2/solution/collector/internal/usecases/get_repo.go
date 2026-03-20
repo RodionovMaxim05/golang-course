@@ -6,14 +6,14 @@ type RepoService interface {
 	GetRepo(owner, name string) (domain.Repository, error)
 }
 
-type RepoUsecases struct {
+type GetRepoUsecase struct {
 	client RepoService
 }
 
-func NewRepoUsecase(client RepoService) *RepoUsecases {
-	return &RepoUsecases{client: client}
+func NewRepoUsecase(client RepoService) *GetRepoUsecase {
+	return &GetRepoUsecase{client: client}
 }
 
-func (ru *RepoUsecases) Execute(owner, name string) (domain.Repository, error) {
+func (ru *GetRepoUsecase) Execute(owner, name string) (domain.Repository, error) {
 	return ru.client.GetRepo(owner, name)
 }

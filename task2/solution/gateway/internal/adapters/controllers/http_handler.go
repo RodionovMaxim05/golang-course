@@ -8,16 +8,16 @@ import (
 	"net/http"
 )
 
-type RepoUseCase interface {
+type GetRepoUsecase interface {
 	Execute(url string) (domain.Repository, error)
 }
 
 type RepoHandler struct {
-	repoUseCase RepoUseCase
+	repoUsecase GetRepoUsecase
 }
 
-func NewRepoHandler(repoUseCase RepoUseCase) *RepoHandler {
-	return &RepoHandler{repoUseCase: repoUseCase}
+func NewRepoHandler(repoUsecase GetRepoUsecase) *RepoHandler {
+	return &RepoHandler{repoUsecase: repoUsecase}
 }
 
 // @Summary     Get repository info
@@ -35,7 +35,7 @@ func (rh *RepoHandler) GetRepo(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repo, err := rh.repoUseCase.Execute(url)
+	repo, err := rh.repoUsecase.Execute(url)
 	if err != nil {
 		mapError(rw, err)
 		return
