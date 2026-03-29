@@ -7,8 +7,8 @@ package main
 
 import (
 	_ "gateway/docs"
-	"gateway/internal/adapters/clients"
-	"gateway/internal/adapters/controllers"
+	"gateway/internal/adapters"
+	"gateway/internal/controllers"
 	"gateway/internal/services"
 	"gateway/internal/usecases"
 	"log"
@@ -27,7 +27,7 @@ func main() {
 	collectorAddr := getEnv("COLLECTOR_ADDR", "localhost:50051")
 	port := getEnv("GATEWAY_PORT", ":8080")
 
-	grpcClient, err := clients.NewClient(collectorAddr)
+	grpcClient, err := adapters.NewClient(collectorAddr)
 	if err != nil {
 		log.Fatalf("failed to connect to collector: %v", err)
 	}

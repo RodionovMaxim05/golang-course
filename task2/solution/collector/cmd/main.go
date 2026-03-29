@@ -1,8 +1,8 @@
 package main
 
 import (
-	"collector/internal/adapters/clients"
-	"collector/internal/adapters/controllers"
+	"collector/internal/adapters"
+	"collector/internal/controllers"
 	"collector/internal/services"
 	"collector/internal/usecases"
 	"log"
@@ -24,7 +24,7 @@ func getEnv(key, fallback string) string {
 func main() {
 	port := getEnv("COLLECTOR_PORT", ":50051")
 
-	githubClient := clients.NewGitHubClient()
+	githubClient := adapters.NewGitHubClient()
 	repoService := services.NewRepoService(githubClient)
 	getRepoUsecase := usecases.NewRepoUsecase(repoService)
 	grpcHandler := controllers.NewRepoHandler(getRepoUsecase)

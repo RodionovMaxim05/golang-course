@@ -14,10 +14,11 @@ A distributed system for fetching GitHub repository information, consisting of t
 Both services follow **Clean Architecture** principles with the following layers:
 
 ```bash
-adapters/   - incoming (HTTP/gRPC handlers) and outgoing (GitHub API, gRPC clients)
-usecases/   - business logic orchestration
-services/   - domain-specific logic
-domain/     - domain models and errors
+adapters/      - incoming (HTTP/gRPC handlers)
+controllers/   - outgoing (GitHub API, gRPC clients)
+usecases/      - business logic orchestration
+services/      - domain-specific logic
+domain/        - domain models and errors
 ```
 
 ## Project Structure
@@ -31,9 +32,8 @@ domain/     - domain models and errors
 ├── collector/                 # gRPC server
 │   ├── cmd/main.go
 │   └── internal/
-│       ├── adapters/
-│       │   ├── clients/       # GitHub API client
-│       │   └── controllers/   # gRPC handler
+│       ├── adapters/          # GitHub API client
+│       ├── controllers/       # gRPC handler
 │       ├── usecases/
 │       ├── services/
 │       └── domain/
@@ -41,9 +41,8 @@ domain/     - domain models and errors
 │   ├── cmd/main.go
 │   ├── docs/                  # Generated Swagger docs
 │   └── internal/
-│       ├── adapters/
-│       │   ├── clients/       # gRPC client to Collector
-│       │   └── controllers/   # HTTP handler + Swagger
+│       ├── adapters/          # gRPC client to Collector
+│       ├── controllers/       # HTTP handler + Swagger
 │       ├── usecases/
 │       ├── services/
 │       └── domain/
