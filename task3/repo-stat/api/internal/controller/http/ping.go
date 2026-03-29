@@ -33,7 +33,6 @@ func NewPingHandler(log *slog.Logger, ping *usecase.Ping) http.HandlerFunc {
 			},
 		}
 
-		//
 		for _, service := range response.Services {
 			if service.Status == "down" {
 				response.Status = "degraded"
@@ -45,7 +44,6 @@ func NewPingHandler(log *slog.Logger, ping *usecase.Ping) http.HandlerFunc {
 				return
 			}
 		}
-		//
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
