@@ -6,14 +6,15 @@
 package main
 
 import (
+	"log"
+	"net/http"
+	"os"
+
 	_ "gateway/docs"
 	"gateway/internal/adapters"
 	"gateway/internal/controllers"
 	"gateway/internal/services"
 	"gateway/internal/usecases"
-	"log"
-	"net/http"
-	"os"
 )
 
 func getEnv(key, fallback string) string {

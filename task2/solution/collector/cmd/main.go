@@ -1,17 +1,17 @@
 package main
 
 import (
-	"collector/internal/adapters"
-	"collector/internal/controllers"
-	"collector/internal/services"
-	"collector/internal/usecases"
 	"log"
 	"net"
 	"os"
 
-	pb "api/gen"
-
 	"google.golang.org/grpc"
+
+	pb "api/gen"
+	"collector/internal/adapters"
+	"collector/internal/controllers"
+	"collector/internal/services"
+	"collector/internal/usecases"
 )
 
 func getEnv(key, fallback string) string {

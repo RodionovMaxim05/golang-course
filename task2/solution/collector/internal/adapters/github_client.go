@@ -1,12 +1,13 @@
 package adapters
 
 import (
-	"collector/internal/domain"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 	"time"
+
+	"collector/internal/domain"
 )
 
 const timeout = 5 * time.Second

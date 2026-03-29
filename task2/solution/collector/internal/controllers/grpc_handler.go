@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"collector/internal/domain"
 	"context"
 	"errors"
 	"fmt"
@@ -9,11 +8,12 @@ import (
 	"net/url"
 	"strings"
 
-	pb "api/gen"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
+
+	pb "api/gen"
+	"collector/internal/domain"
 )
 
 type GetRepoUsecase interface {

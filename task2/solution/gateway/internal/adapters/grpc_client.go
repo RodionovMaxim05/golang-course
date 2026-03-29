@@ -3,15 +3,15 @@ package adapters
 import (
 	"context"
 	"fmt"
-	"gateway/internal/domain"
 	"time"
-
-	pb "api/gen"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
+
+	pb "api/gen"
+	"gateway/internal/domain"
 )
 
 const timeout = 5 * time.Second

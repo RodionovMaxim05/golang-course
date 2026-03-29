@@ -1,10 +1,11 @@
 package controllers
 
 import (
-	_ "gateway/docs"
 	"net/http"
 
 	httpSwagger "github.com/swaggo/http-swagger"
+
+	_ "gateway/docs"
 )
 
 func SwaggerHandler() http.Handler {
