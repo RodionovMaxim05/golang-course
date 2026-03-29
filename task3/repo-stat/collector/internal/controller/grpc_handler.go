@@ -14,7 +14,7 @@ import (
 )
 
 type GetRepoUsecase interface {
-	Execute(owner, name string) (domain.Repository, error)
+	Execute(ctx context.Context, owner, name string) (domain.Repository, error)
 }
 
 type RepoHandler struct {
@@ -30,7 +30,7 @@ func NewRepoHandler(log *slog.Logger, repoUsecase GetRepoUsecase) *RepoHandler {
 func (rh *RepoHandler) GetRepo(ctx context.Context, req *collectorpb.GetRepoRequest) (*collectorpb.GetRepoResponse, error) {
 	rh.log.Debug("processor get repo request received", "name", req.Name, "repo", req.Repo)
 
-	repo, err := rh.repoUsecase.Execute(req.Name, req.Repo)
+	repo, err := rh.repoUsecase.Execute(ctx, req.Name, req.Repo)
 	if err != nil {
 		return nil, mapError(err)
 	}

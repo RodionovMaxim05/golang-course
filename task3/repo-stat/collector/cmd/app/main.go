@@ -30,7 +30,7 @@ func run(ctx context.Context) error {
 	log.Debug("debug messages are enabled")
 
 	// handlers
-	githubClient := adapter.NewGitHubClient(cfg.GitHub)
+	githubClient := adapter.NewGitHubClient(cfg.GitHub, log)
 	getRepoUsecase := usecase.NewRepoUsecase(githubClient)
 	grpcHandler := controller.NewRepoHandler(log, getRepoUsecase)
 

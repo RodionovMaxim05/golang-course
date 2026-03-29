@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"repo-stat/api/internal/usecase"
-	processorpb "repo-stat/proto/processor"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"repo-stat/api/internal/usecase"
+	processorpb "repo-stat/proto/processor"
 )
 
 // GetRepo godoc
@@ -35,25 +35,17 @@ func NewGetRepoHandler(log *slog.Logger, getRepo *usecase.GetRepo) http.HandlerF
 
 		resp, err := getRepo.Execute(r.Context(), owner, repo)
 		if err != nil {
-			log.Error("failed to get repo", "error", err)
 			st := status.Convert(err)
-			code := http.StatusInternalServerError
-			switch st.Code() {
-			case codes.NotFound:
-				code = http.StatusNotFound
-			case codes.ResourceExhausted:
-				code = http.StatusTooManyRequests
-			case codes.Unavailable:
-				code = http.StatusServiceUnavailable
-			case codes.InvalidArgument:
-				code = http.StatusBadRequest
-			}
+			httpCode := grpcStatusToHTTP(st.Code())
 
-			writeJSONError(w, code, st.Message())
+			log.Error("failed to get repo", "error", err, "grpc_code", st.Code())
+			writeJSONError(w, httpCode, st.Message())
 			return
 		}
 
 		response := mapRepoResponse(resp)
+
+		log.Info("repository info fetched successfully", "owner", owner, "repo", repo, "stars", resp.StargazersCount, "forks", resp.ForksCount)
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -64,18 +56,32 @@ func NewGetRepoHandler(log *slog.Logger, getRepo *usecase.GetRepo) http.HandlerF
 	}
 }
 
+func grpcStatusToHTTP(code codes.Code) int {
+	switch code {
+	case codes.NotFound:
+		return http.StatusNotFound
+	case codes.ResourceExhausted:
+		return http.StatusTooManyRequests
+	case codes.Unavailable:
+		return http.StatusServiceUnavailable
+	case codes.InvalidArgument:
+		return http.StatusBadRequest
+	default:
+		return http.StatusInternalServerError
+	}
+}
+
 func parseGitHubURL(rawURL string) (owner, repo string, err error) {
 	u, err := url.Parse(rawURL)
-	if err != nil {
-		return "", "", err
+	if err != nil || u.Host != "github.com" {
+		return "", "", fmt.Errorf("unsupported host or invalid url")
 	}
-	if u.Host != "github.com" {
-		return "", "", fmt.Errorf("invalid host: %s", u.Host)
-	}
+
 	parts := strings.Split(strings.Trim(u.Path, "/"), "/")
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("invalid path: %s", u.Path)
 	}
+
 	return parts[0], parts[1], nil
 }
 
