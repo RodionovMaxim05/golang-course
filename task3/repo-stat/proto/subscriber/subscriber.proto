@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package subscriber.v1;
 
-option go_package = "yadro.com/course/proto/gen/go/subscriber/v1;subscriberv1";
+option go_package = "repo-stat/proto/gen/go/subscriber/v1;subscriberv1";
 
 service Subscriber {
   rpc Ping(PingRequest) returns (PingResponse);

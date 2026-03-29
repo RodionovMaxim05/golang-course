@@ -1,0 +1,96 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API Gateway for repository statistics",
+        "title": "Repo Stat API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:28080",
+    "basePath": "/",
+    "paths": {
+        "/api/ping": {
+            "get": {
+                "description": "Get ping status of processor and subscriber",
+                "summary": "Ping services",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.PingResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.PingResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/repositories/info": {
+            "get": {
+                "description": "Get basic information about a GitHub repository",
+                "summary": "Get repository info",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "GitHub repository URL",
+                        "name": "url",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "dto.PingResponse": {
+            "type": "object",
+            "properties": {
+                "services": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ServiceStatus"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ServiceStatus": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

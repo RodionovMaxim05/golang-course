@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+
 	"repo-stat/api/internal/domain"
 )
 
