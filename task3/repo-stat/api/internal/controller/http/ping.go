@@ -19,34 +19,31 @@ func NewPingHandler(log *slog.Logger, ping *usecase.Ping) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		subscriberStatus, processorStatus := ping.Execute(r.Context())
 
-		response := dto.PingResponse{
-			Status: "ok",
-			Services: []dto.ServiceStatus{
-				{
-					Name:   "processor",
-					Status: string(processorStatus),
-				},
-				{
-					Name:   "subscriber",
-					Status: string(subscriberStatus),
-				},
-			},
+		services := []dto.ServiceStatus{
+			{Name: "processor", Status: string(processorStatus)},
+			{Name: "subscriber", Status: string(subscriberStatus)},
 		}
 
-		for _, service := range response.Services {
-			if service.Status == "down" {
-				response.Status = "degraded"
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusServiceUnavailable)
-				if err := json.NewEncoder(w).Encode(response); err != nil {
-					log.Error("failed to write ping response", "error", err)
-				}
-				return
+		globalStatus := "ok"
+		statusCode := http.StatusOK
+
+		for _, s := range services {
+			if s.Status == "down" {
+				globalStatus = "degraded"
+				statusCode = http.StatusServiceUnavailable
+				break
 			}
 		}
 
+		log.Info("ping request processed", "status", globalStatus, "processor", processorStatus, "subscriber", subscriberStatus)
+
+		response := dto.PingResponse{
+			Status:   globalStatus,
+			Services: services,
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(statusCode)
 
 		if err := json.NewEncoder(w).Encode(response); err != nil {
 			log.Error("failed to write ping response", "error", err)

@@ -1,9 +1,13 @@
 package usecase
 
-import "repo-stat/collector/internal/domain"
+import (
+	"context"
+
+	"repo-stat/collector/internal/domain"
+)
 
 type RepoService interface {
-	GetRepo(owner, name string) (domain.Repository, error)
+	GetRepo(ctx context.Context, owner, name string) (domain.Repository, error)
 }
 
 type GetRepoUsecase struct {
@@ -14,6 +18,6 @@ func NewRepoUsecase(client RepoService) *GetRepoUsecase {
 	return &GetRepoUsecase{client: client}
 }
 
-func (gru *GetRepoUsecase) Execute(owner, name string) (domain.Repository, error) {
-	return gru.client.GetRepo(owner, name)
+func (gru *GetRepoUsecase) Execute(ctx context.Context, owner, name string) (domain.Repository, error) {
+	return gru.client.GetRepo(ctx, owner, name)
 }
