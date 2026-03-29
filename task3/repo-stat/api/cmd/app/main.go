@@ -1,3 +1,8 @@
+// @title       Repo Stat API
+// @version     1.0
+// @description API Gateway for repository statistics
+// @host        localhost:28080
+// @BasePath    /
 package main
 
 import (
@@ -6,7 +11,9 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+
 	"repo-stat/api/config"
+	_ "repo-stat/api/docs"
 	"repo-stat/api/internal/controller/http"
 	"repo-stat/platform/httpserver"
 	"repo-stat/platform/logger"
@@ -21,9 +28,7 @@ func run(ctx context.Context) error {
 	cfg := config.MustLoad(configPath)
 
 	// logger
-
 	log := logger.MustMakeLogger(cfg.Logger.LogLevel)
-
 	log.Info("starting server...")
 	log.Debug("debug messages are enabled")
 
@@ -53,5 +58,4 @@ func main() {
 		cancel()
 		os.Exit(1)
 	}
-	cancel()
 }
