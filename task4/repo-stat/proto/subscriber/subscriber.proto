@@ -8,10 +8,11 @@ service Subscriber {
   rpc Ping(PingRequest) returns (PingResponse);
   rpc Subscribe(SubscribeRequest) returns (SubscribeResponse);
   rpc Unsubscribe(UnsubscribeRequest) returns (UnsubscribeResponse);
-  rpc GetSubscriptions(GetSubscriptionsRequest) returns (GetSubscriptionsResponse);
+  rpc GetSubscriptions(GetSubsRequest) returns (GetSubsResponse);
 }
 
-message PingRequest {}
+message PingRequest {
+}
 
 message PingResponse {
   string reply = 1;
@@ -26,16 +27,19 @@ message SubscribeRequest {
   Subscription subscription = 1;
 }
 
-message SubscribeResponse {}
+message SubscribeResponse {
+}
 
 message UnsubscribeRequest {
   Subscription subscription = 1;
 }
 
-message UnsubscribeResponse {}
+message UnsubscribeResponse {
+}
 
-message GetSubscriptionsRequest {}
+message GetSubsRequest {
+}
 
-message GetSubscriptionsResponse {
+message GetSubsResponse {
   repeated Subscription subscriptions = 1;
 }

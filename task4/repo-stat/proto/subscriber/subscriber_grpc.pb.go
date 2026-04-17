@@ -32,7 +32,7 @@ type SubscriberClient interface {
 	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
 	Subscribe(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (*SubscribeResponse, error)
 	Unsubscribe(ctx context.Context, in *UnsubscribeRequest, opts ...grpc.CallOption) (*UnsubscribeResponse, error)
-	GetSubscriptions(ctx context.Context, in *GetSubscriptionsRequest, opts ...grpc.CallOption) (*GetSubscriptionsResponse, error)
+	GetSubscriptions(ctx context.Context, in *GetSubsRequest, opts ...grpc.CallOption) (*GetSubsResponse, error)
 }
 
 type subscriberClient struct {
@@ -73,9 +73,9 @@ func (c *subscriberClient) Unsubscribe(ctx context.Context, in *UnsubscribeReque
 	return out, nil
 }
 
-func (c *subscriberClient) GetSubscriptions(ctx context.Context, in *GetSubscriptionsRequest, opts ...grpc.CallOption) (*GetSubscriptionsResponse, error) {
+func (c *subscriberClient) GetSubscriptions(ctx context.Context, in *GetSubsRequest, opts ...grpc.CallOption) (*GetSubsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetSubscriptionsResponse)
+	out := new(GetSubsResponse)
 	err := c.cc.Invoke(ctx, Subscriber_GetSubscriptions_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -90,7 +90,7 @@ type SubscriberServer interface {
 	Ping(context.Context, *PingRequest) (*PingResponse, error)
 	Subscribe(context.Context, *SubscribeRequest) (*SubscribeResponse, error)
 	Unsubscribe(context.Context, *UnsubscribeRequest) (*UnsubscribeResponse, error)
-	GetSubscriptions(context.Context, *GetSubscriptionsRequest) (*GetSubscriptionsResponse, error)
+	GetSubscriptions(context.Context, *GetSubsRequest) (*GetSubsResponse, error)
 	mustEmbedUnimplementedSubscriberServer()
 }
 
@@ -110,7 +110,7 @@ func (UnimplementedSubscriberServer) Subscribe(context.Context, *SubscribeReques
 func (UnimplementedSubscriberServer) Unsubscribe(context.Context, *UnsubscribeRequest) (*UnsubscribeResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Unsubscribe not implemented")
 }
-func (UnimplementedSubscriberServer) GetSubscriptions(context.Context, *GetSubscriptionsRequest) (*GetSubscriptionsResponse, error) {
+func (UnimplementedSubscriberServer) GetSubscriptions(context.Context, *GetSubsRequest) (*GetSubsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetSubscriptions not implemented")
 }
 func (UnimplementedSubscriberServer) mustEmbedUnimplementedSubscriberServer() {}
@@ -189,7 +189,7 @@ func _Subscriber_Unsubscribe_Handler(srv interface{}, ctx context.Context, dec f
 }
 
 func _Subscriber_GetSubscriptions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetSubscriptionsRequest)
+	in := new(GetSubsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -201,7 +201,7 @@ func _Subscriber_GetSubscriptions_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: Subscriber_GetSubscriptions_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SubscriberServer).GetSubscriptions(ctx, req.(*GetSubscriptionsRequest))
+		return srv.(SubscriberServer).GetSubscriptions(ctx, req.(*GetSubsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
