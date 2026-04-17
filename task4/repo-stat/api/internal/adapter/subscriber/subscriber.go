@@ -79,7 +79,7 @@ func (c *Client) Unsubscribe(ctx context.Context, owner, repo string) error {
 }
 
 func (c *Client) GetSubscriptions(ctx context.Context) ([]domain.Subscription, error) {
-	resp, err := c.pb.GetSubscriptions(ctx, &subscriberpb.GetSubscriptionsRequest{})
+	resp, err := c.pb.GetSubscriptions(ctx, &subscriberpb.GetSubsRequest{})
 	if err != nil {
 		c.log.Error("subscriber getSubscriptions failed", "error", err)
 		return nil, grpcAdapter.ErrToDomain(err)
