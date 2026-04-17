@@ -1,0 +1,170 @@
+basePath: /
+definitions:
+  api_internal_controller_http.subscribeRequest:
+    properties:
+      url:
+        type: string
+    type: object
+  repo-stat_api_internal_dto.PingResponse:
+    properties:
+      services:
+        items:
+          $ref: '#/definitions/repo-stat_api_internal_dto.ServiceStatus'
+        type: array
+      status:
+        type: string
+    type: object
+  repo-stat_api_internal_dto.ServiceStatus:
+    properties:
+      name:
+        type: string
+      status:
+        type: string
+    type: object
+host: localhost:28080
+info:
+  contact: {}
+  description: API Gateway for repository statistics
+  title: Repo Stat API
+  version: "1.0"
+paths:
+  /api/ping:
+    get:
+      description: Get ping status of processor and subscriber
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/repo-stat_api_internal_dto.PingResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/repo-stat_api_internal_dto.PingResponse'
+      summary: Ping services
+  /api/repositories/info:
+    get:
+      description: Get basic information about a GitHub repository
+      parameters:
+      - description: GitHub repository URL
+        in: query
+        name: url
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get repository info
+  /subscriptions:
+    get:
+      description: Return all subscribed GitHub repositories
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties:
+                type: string
+              type: object
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get current subscription list
+    post:
+      consumes:
+      - application/json
+      description: Subscribe to receive information about the GitHub repository
+      parameters:
+      - description: GitHub repository URL
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api_internal_controller_http.subscribeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Subscribe to the repository
+  /subscriptions/{owner}/{repo}:
+    delete:
+      description: Remove subscription for GitHub repository
+      parameters:
+      - description: Repository owner
+        in: path
+        name: owner
+        required: true
+        type: string
+      - description: Repository name
+        in: path
+        name: repo
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Unsubscribe from the repository
+  /subscriptions/info:
+    get:
+      description: Retrieve aggregated information for all subscribed repositories
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get subscribed repositories info
+swagger: "2.0"
