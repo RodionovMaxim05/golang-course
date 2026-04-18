@@ -62,7 +62,7 @@ func (rh *RepoHandler) GetSubscriptionsInfo(ctx context.Context, req *collectorp
 
 func toProtoRepo(repo domain.Repository) *collectorpb.GetRepoResponse {
 	return &collectorpb.GetRepoResponse{
-		Name:            repo.Name,
+		FullName:        repo.FullName,
 		Description:     repo.Description,
 		StargazersCount: int32(repo.StargazersCount),
 		ForksCount:      int32(repo.ForksCount),
