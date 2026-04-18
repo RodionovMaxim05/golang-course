@@ -70,7 +70,11 @@ services:
       - POSTGRES_HOST=${POSTGRES_HOST:-postgres}
       - POSTGRES_PORT=${POSTGRES_PORT:-5432}
       - POSTGRES_SSLMODE=${POSTGRES_SSLMODE:-disable}
-    command: ["-path", "/migrations", "-database", "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=${POSTGRES_SSLMODE}", "up"]
+    command: [
+      "-path", "/migrations",
+      "-database", "postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@${POSTGRES_HOST:-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-repo_stat}?sslmode=${POSTGRES_SSLMODE:-disable}",
+      "up"
+    ]
     volumes:
       - ./repo-stat/subscriber/migrations:/migrations
     depends_on:
