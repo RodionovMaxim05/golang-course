@@ -57,7 +57,10 @@ func NewSubscribeHandler(log *slog.Logger, subscribe *usecase.Subscribe) http.Ha
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(response)
+		err = json.NewEncoder(w).Encode(response)
+		if err != nil {
+			log.Error("failed to write subscription response", "error", err)
+		}
 	}
 }
 
