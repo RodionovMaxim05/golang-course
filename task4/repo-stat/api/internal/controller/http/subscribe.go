@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"repo-stat/api/internal/dto"
 	"repo-stat/api/internal/usecase"
 )
 
@@ -18,7 +19,7 @@ type subscribeRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body subscribeRequest true "GitHub repository URL"
-// @Success 200 {object} map[string]interface{}
+// @Success 201 {object} dto.SubscriptionResponse
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /subscriptions [post]
@@ -38,7 +39,7 @@ func NewSubscribeHandler(log *slog.Logger, subscribe *usecase.Subscribe) http.Ha
 			return
 		}
 
-		err = subscribe.Execute(r.Context(), owner, repo)
+		subscription, err := subscribe.Execute(r.Context(), owner, repo)
 		if err != nil {
 			httpCode := DomainErrToHTTP(err)
 			log.Error("failed to subscribe repository", "error", err)
@@ -48,8 +49,15 @@ func NewSubscribeHandler(log *slog.Logger, subscribe *usecase.Subscribe) http.Ha
 
 		log.Info("repository subscription created", "owner", owner, "repo", repo)
 
+		response := dto.SubscriptionResponse{
+			Owner:     subscription.Owner,
+			Repo:      subscription.Repo,
+			CreatedAt: subscription.CreatedAt,
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(response)
 	}
 }
 
@@ -89,7 +97,7 @@ func NewUnsubscribeHandler(log *slog.Logger, unsubscribe *usecase.Unsubscribe) h
 // ListSubscriptions godoc
 // @Summary Get current subscription list
 // @Description Return all subscribed GitHub repositories
-// @Success 200 {array} map[string]string
+// @Success 200 {array} dto.SubscriptionResponse
 // @Failure 500 {object} map[string]string
 // @Router /subscriptions [get]
 func NewListSubscriptionsHandler(log *slog.Logger, subscriptions *usecase.GetSubscriptions) http.HandlerFunc {
@@ -102,9 +110,13 @@ func NewListSubscriptionsHandler(log *slog.Logger, subscriptions *usecase.GetSub
 			return
 		}
 
-		result := make([]map[string]string, 0, len(resp))
+		result := make([]dto.SubscriptionResponse, 0, len(resp))
 		for _, sub := range resp {
-			result = append(result, map[string]string{"owner": sub.Owner, "repo": sub.Repo})
+			result = append(result, dto.SubscriptionResponse{
+				Owner:     sub.Owner,
+				Repo:      sub.Repo,
+				CreatedAt: sub.CreatedAt,
+			})
 		}
 
 		log.Info("subscriptions listed", "count", len(result))

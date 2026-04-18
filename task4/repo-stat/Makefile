@@ -46,7 +46,7 @@ golint:
 	$(GOLANGCI_LINT) run --timeout=2m -E gocritic -v ./...
 
 swagger:
-	swag init -g api/cmd/app/main.go -o api/docs --parseDependency --parseInternal
+	swag init -g cmd/app/main.go -o api/docs -d ./api --parseDependency --parseInternal
 
 tools:
 	go install github.com/yoheimuta/protolint/cmd/protolint@latest
