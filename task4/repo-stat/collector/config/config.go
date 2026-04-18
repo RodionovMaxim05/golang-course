@@ -1,7 +1,7 @@
 package config
 
 import (
-	"repo-stat/collector/internal/adapter"
+	"repo-stat/collector/internal/adapter/github"
 	"repo-stat/platform/env"
 	"repo-stat/platform/grpcserver"
 	"repo-stat/platform/logger"
@@ -11,16 +11,16 @@ type App struct {
 	AppName string `yaml:"app_name" env:"APP_NAME" env-default:"repo-stat-collector"`
 }
 
-type Config struct {
-	App        App               `yaml:"app"`
-	GitHub     adapter.Config    `yaml:"github"`
-	Subscriber SubscriberConfig  `yaml:"subscriber"`
-	GRPC       grpcserver.Config `yaml:"grpc"`
-	Logger     logger.Config     `yaml:"logger"`
+type Services struct {
+	Subscriber string `yaml:"subscriber" env:"SUBSCRIBER_ADDRESS" env-default:"localhost:8081"`
 }
 
-type SubscriberConfig struct {
-	Address string `yaml:"address" env:"SUBSCRIBER_ADDRESS" env-default:"subscriber:8081"`
+type Config struct {
+	App      App               `yaml:"app"`
+	GitHub   github.Config     `yaml:"github"`
+	Services Services          `yaml:"services"`
+	GRPC     grpcserver.Config `yaml:"grpc"`
+	Logger   logger.Config     `yaml:"logger"`
 }
 
 func MustLoad(path string) Config {

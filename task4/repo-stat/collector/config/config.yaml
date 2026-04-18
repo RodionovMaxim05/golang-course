@@ -8,8 +8,8 @@ grpc:
 github:
   timeout: "5s"
 
-subscriber:
-  address: "subscriber:8081"
-
 logger:
   log_level: "DEBUG"
+
+services:
+  subscriber: "localhost:8081"

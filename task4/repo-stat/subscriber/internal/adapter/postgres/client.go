@@ -2,22 +2,25 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"repo-stat/subscriber/internal/domain"
 )
 
 type SubscriptionRepository struct {
-	db      *pgxpool.Pool
+	pool    *pgxpool.Pool
 	queries Querier
 }
 
-func NewSubscriptionRepository(db *pgxpool.Pool) *SubscriptionRepository {
+func NewSubscriptionRepository(pool *pgxpool.Pool) *SubscriptionRepository {
 	return &SubscriptionRepository{
-		db:      db,
-		queries: New(db),
+		pool:    pool,
+		queries: New(pool),
 	}
 }
 
@@ -30,18 +33,15 @@ func (r *SubscriptionRepository) Create(ctx context.Context, sub *domain.Subscri
 		return nil, fmt.Errorf("create subscription: %w", err)
 	}
 
-	return &domain.SubscriptionResponse{
-		Owner:     row.Owner,
-		Repo:      row.Repo,
-		CreatedAt: row.CreatedAt.Time,
-	}, nil
+	resp := toSubscriptionResponse(row.Owner, row.Repo, row.CreatedAt)
+	return &resp, nil
 }
 
 func (r *SubscriptionRepository) Delete(ctx context.Context, owner, repo string) error {
-	err := r.queries.DeleteSubscription(ctx, DeleteSubscriptionParams{
-		Owner: owner,
-		Repo:  repo,
-	})
+	err := r.queries.DeleteSubscription(ctx, DeleteSubscriptionParams{Owner: owner, Repo: repo})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return domain.ErrNotFound
+	}
 	if err != nil {
 		return fmt.Errorf("delete subscription: %w", err)
 	}
@@ -56,11 +56,7 @@ func (r *SubscriptionRepository) List(ctx context.Context) ([]domain.Subscriptio
 
 	subs := make([]domain.SubscriptionResponse, 0, len(rows))
 	for _, row := range rows {
-		subs = append(subs, domain.SubscriptionResponse{
-			Owner:     row.Owner,
-			Repo:      row.Repo,
-			CreatedAt: row.CreatedAt.Time,
-		})
+		subs = append(subs, toSubscriptionResponse(row.Owner, row.Repo, row.CreatedAt))
 	}
 	return subs, nil
 }
@@ -71,4 +67,12 @@ func (r *SubscriptionRepository) Exists(ctx context.Context, owner, repo string)
 		return false, fmt.Errorf("check subscription exists: %w", err)
 	}
 	return exists, nil
+}
+
+func toSubscriptionResponse(owner, repo string, createdAt pgtype.Timestamptz) domain.SubscriptionResponse {
+	return domain.SubscriptionResponse{
+		Owner:     owner,
+		Repo:      repo,
+		CreatedAt: createdAt.Time,
+	}
 }
