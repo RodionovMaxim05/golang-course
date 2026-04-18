@@ -1,6 +1,6 @@
 basePath: /
 definitions:
-  api_internal_controller_http.subscribeRequest:
+  internal_controller_http.subscribeRequest:
     properties:
       url:
         type: string
@@ -19,6 +19,15 @@ definitions:
       name:
         type: string
       status:
+        type: string
+    type: object
+  repo-stat_api_internal_dto.SubscriptionResponse:
+    properties:
+      created_at:
+        type: string
+      owner:
+        type: string
+      repo:
         type: string
     type: object
 host: localhost:28080
@@ -73,9 +82,7 @@ paths:
           description: OK
           schema:
             items:
-              additionalProperties:
-                type: string
-              type: object
+              $ref: '#/definitions/repo-stat_api_internal_dto.SubscriptionResponse'
             type: array
         "500":
           description: Internal Server Error
@@ -94,15 +101,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api_internal_controller_http.subscribeRequest'
+          $ref: '#/definitions/internal_controller_http.subscribeRequest'
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/repo-stat_api_internal_dto.SubscriptionResponse'
         "400":
           description: Bad Request
           schema:

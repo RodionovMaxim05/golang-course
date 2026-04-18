@@ -7,3 +7,6 @@ grpc:
 
 logger:
   log_level: "DEBUG"
+
+github:
+  timeout: "5s"

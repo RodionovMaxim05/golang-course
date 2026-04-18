@@ -81,10 +81,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "object",
-                                "additionalProperties": {
-                                    "type": "string"
-                                }
+                                "$ref": "#/definitions/repo-stat_api_internal_dto.SubscriptionResponse"
                             }
                         }
                     },
@@ -115,16 +112,15 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api_internal_controller_http.subscribeRequest"
+                            "$ref": "#/definitions/internal_controller_http.subscribeRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/repo-stat_api_internal_dto.SubscriptionResponse"
                         }
                     },
                     "400": {
@@ -226,7 +222,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "api_internal_controller_http.subscribeRequest": {
+        "internal_controller_http.subscribeRequest": {
             "type": "object",
             "properties": {
                 "url": {
@@ -255,6 +251,20 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "repo-stat_api_internal_dto.SubscriptionResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "owner": {
+                    "type": "string"
+                },
+                "repo": {
                     "type": "string"
                 }
             }

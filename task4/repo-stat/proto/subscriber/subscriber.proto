@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package subscriber.v1;
 
+import "google/protobuf/timestamp.proto";
+
 option go_package = "repo-stat/proto/gen/go/subscriber/v1;subscriberv1";
 
 service Subscriber {
@@ -23,11 +25,18 @@ message Subscription {
   string repo = 2;
 }
 
+message SubscriptionResponse {
+  string owner = 1;
+  string repo = 2;
+  google.protobuf.Timestamp created_at = 3;
+}
+
 message SubscribeRequest {
   Subscription subscription = 1;
 }
 
 message SubscribeResponse {
+  SubscriptionResponse subscription = 1;
 }
 
 message UnsubscribeRequest {
@@ -41,5 +50,5 @@ message GetSubsRequest {
 }
 
 message GetSubsResponse {
-  repeated Subscription subscriptions = 1;
+  repeated SubscriptionResponse subscriptions = 1;
 }
