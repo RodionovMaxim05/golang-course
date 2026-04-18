@@ -14,7 +14,7 @@ type App struct {
 type Config struct {
 	App        App               `yaml:"app"`
 	GitHub     adapter.Config    `yaml:"github"`
-	Subscriber SubscriberConfig `yaml:"subscriber"`
+	Subscriber SubscriberConfig  `yaml:"subscriber"`
 	GRPC       grpcserver.Config `yaml:"grpc"`
 	Logger     logger.Config     `yaml:"logger"`
 }
