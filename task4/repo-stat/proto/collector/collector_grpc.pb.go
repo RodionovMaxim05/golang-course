@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	RepoService_GetRepo_FullMethodName = "/api.RepoService/GetRepo"
+	RepoService_GetRepo_FullMethodName              = "/api.RepoService/GetRepo"
+	RepoService_GetSubscriptionsInfo_FullMethodName = "/api.RepoService/GetSubscriptionsInfo"
 )
 
 // RepoServiceClient is the client API for RepoService service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RepoServiceClient interface {
 	GetRepo(ctx context.Context, in *GetRepoRequest, opts ...grpc.CallOption) (*GetRepoResponse, error)
+	GetSubscriptionsInfo(ctx context.Context, in *GetSubsInfoRequest, opts ...grpc.CallOption) (*GetSubsInfoResponse, error)
 }
 
 type repoServiceClient struct {
@@ -47,11 +49,22 @@ func (c *repoServiceClient) GetRepo(ctx context.Context, in *GetRepoRequest, opt
 	return out, nil
 }
 
+func (c *repoServiceClient) GetSubscriptionsInfo(ctx context.Context, in *GetSubsInfoRequest, opts ...grpc.CallOption) (*GetSubsInfoResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetSubsInfoResponse)
+	err := c.cc.Invoke(ctx, RepoService_GetSubscriptionsInfo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RepoServiceServer is the server API for RepoService service.
 // All implementations must embed UnimplementedRepoServiceServer
 // for forward compatibility.
 type RepoServiceServer interface {
 	GetRepo(context.Context, *GetRepoRequest) (*GetRepoResponse, error)
+	GetSubscriptionsInfo(context.Context, *GetSubsInfoRequest) (*GetSubsInfoResponse, error)
 	mustEmbedUnimplementedRepoServiceServer()
 }
 
@@ -64,6 +77,9 @@ type UnimplementedRepoServiceServer struct{}
 
 func (UnimplementedRepoServiceServer) GetRepo(context.Context, *GetRepoRequest) (*GetRepoResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetRepo not implemented")
+}
+func (UnimplementedRepoServiceServer) GetSubscriptionsInfo(context.Context, *GetSubsInfoRequest) (*GetSubsInfoResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetSubscriptionsInfo not implemented")
 }
 func (UnimplementedRepoServiceServer) mustEmbedUnimplementedRepoServiceServer() {}
 func (UnimplementedRepoServiceServer) testEmbeddedByValue()                     {}
@@ -104,6 +120,24 @@ func _RepoService_GetRepo_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RepoService_GetSubscriptionsInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSubsInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RepoServiceServer).GetSubscriptionsInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RepoService_GetSubscriptionsInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RepoServiceServer).GetSubscriptionsInfo(ctx, req.(*GetSubsInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RepoService_ServiceDesc is the grpc.ServiceDesc for RepoService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -114,6 +148,10 @@ var RepoService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetRepo",
 			Handler:    _RepoService_GetRepo_Handler,
+		},
+		{
+			MethodName: "GetSubscriptionsInfo",
+			Handler:    _RepoService_GetSubscriptionsInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

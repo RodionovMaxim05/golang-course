@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Processor_Ping_FullMethodName    = "/processor.v1.Processor/Ping"
-	Processor_GetRepo_FullMethodName = "/processor.v1.Processor/GetRepo"
+	Processor_Ping_FullMethodName                 = "/processor.v1.Processor/Ping"
+	Processor_GetRepo_FullMethodName              = "/processor.v1.Processor/GetRepo"
+	Processor_GetSubscriptionsInfo_FullMethodName = "/processor.v1.Processor/GetSubscriptionsInfo"
 )
 
 // ProcessorClient is the client API for Processor service.
@@ -29,6 +30,7 @@ const (
 type ProcessorClient interface {
 	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
 	GetRepo(ctx context.Context, in *GetRepoRequest, opts ...grpc.CallOption) (*GetRepoResponse, error)
+	GetSubscriptionsInfo(ctx context.Context, in *GetSubsInfoRequest, opts ...grpc.CallOption) (*GetSubsInfoResponse, error)
 }
 
 type processorClient struct {
@@ -59,12 +61,23 @@ func (c *processorClient) GetRepo(ctx context.Context, in *GetRepoRequest, opts 
 	return out, nil
 }
 
+func (c *processorClient) GetSubscriptionsInfo(ctx context.Context, in *GetSubsInfoRequest, opts ...grpc.CallOption) (*GetSubsInfoResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetSubsInfoResponse)
+	err := c.cc.Invoke(ctx, Processor_GetSubscriptionsInfo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProcessorServer is the server API for Processor service.
 // All implementations must embed UnimplementedProcessorServer
 // for forward compatibility.
 type ProcessorServer interface {
 	Ping(context.Context, *PingRequest) (*PingResponse, error)
 	GetRepo(context.Context, *GetRepoRequest) (*GetRepoResponse, error)
+	GetSubscriptionsInfo(context.Context, *GetSubsInfoRequest) (*GetSubsInfoResponse, error)
 	mustEmbedUnimplementedProcessorServer()
 }
 
@@ -80,6 +93,9 @@ func (UnimplementedProcessorServer) Ping(context.Context, *PingRequest) (*PingRe
 }
 func (UnimplementedProcessorServer) GetRepo(context.Context, *GetRepoRequest) (*GetRepoResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetRepo not implemented")
+}
+func (UnimplementedProcessorServer) GetSubscriptionsInfo(context.Context, *GetSubsInfoRequest) (*GetSubsInfoResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetSubscriptionsInfo not implemented")
 }
 func (UnimplementedProcessorServer) mustEmbedUnimplementedProcessorServer() {}
 func (UnimplementedProcessorServer) testEmbeddedByValue()                   {}
@@ -138,6 +154,24 @@ func _Processor_GetRepo_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Processor_GetSubscriptionsInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSubsInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProcessorServer).GetSubscriptionsInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Processor_GetSubscriptionsInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProcessorServer).GetSubscriptionsInfo(ctx, req.(*GetSubsInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Processor_ServiceDesc is the grpc.ServiceDesc for Processor service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -152,6 +186,10 @@ var Processor_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetRepo",
 			Handler:    _Processor_GetRepo_Handler,
+		},
+		{
+			MethodName: "GetSubscriptionsInfo",
+			Handler:    _Processor_GetSubscriptionsInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

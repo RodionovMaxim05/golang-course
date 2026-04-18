@@ -12,10 +12,15 @@ type App struct {
 }
 
 type Config struct {
-	App    App               `yaml:"app"`
-	GitHub adapter.Config    `yaml:"github"`
-	GRPC   grpcserver.Config `yaml:"grpc"`
-	Logger logger.Config     `yaml:"logger"`
+	App        App               `yaml:"app"`
+	GitHub     adapter.Config    `yaml:"github"`
+	Subscriber SubscriberConfig `yaml:"subscriber"`
+	GRPC       grpcserver.Config `yaml:"grpc"`
+	Logger     logger.Config     `yaml:"logger"`
+}
+
+type SubscriberConfig struct {
+	Address string `yaml:"address" env:"SUBSCRIBER_ADDRESS" env-default:"subscriber:8081"`
 }
 
 func MustLoad(path string) Config {

@@ -17,14 +17,23 @@ type GetRepoUsecase interface {
 	Execute(ctx context.Context, owner, name string) (domain.Repository, error)
 }
 
+type GetSubscriptionsInfoUsecase interface {
+	Execute(ctx context.Context) ([]domain.Repository, error)
+}
+
 type RepoHandler struct {
 	log *slog.Logger
 	collectorpb.UnimplementedRepoServiceServer
-	repoUsecase GetRepoUsecase
+	repoUsecase              GetRepoUsecase
+	subscriptionsInfoUsecase GetSubscriptionsInfoUsecase
 }
 
-func NewRepoHandler(log *slog.Logger, repoUsecase GetRepoUsecase) *RepoHandler {
-	return &RepoHandler{log: log, repoUsecase: repoUsecase}
+func NewRepoHandler(log *slog.Logger, repoUsecase GetRepoUsecase, subscriptionsInfoUsecase GetSubscriptionsInfoUsecase) *RepoHandler {
+	return &RepoHandler{
+		log:                      log,
+		repoUsecase:              repoUsecase,
+		subscriptionsInfoUsecase: subscriptionsInfoUsecase,
+	}
 }
 
 func (rh *RepoHandler) GetRepo(ctx context.Context, req *collectorpb.GetRepoRequest) (*collectorpb.GetRepoResponse, error) {
@@ -43,6 +52,28 @@ func (rh *RepoHandler) GetRepo(ctx context.Context, req *collectorpb.GetRepoRequ
 		ForksCount:      int32(repo.ForksCount),
 		CreatedAt:       timestamppb.New(repo.CreatedAt),
 	}, nil
+}
+
+func (rh *RepoHandler) GetSubscriptionsInfo(ctx context.Context, req *collectorpb.GetSubsInfoRequest) (*collectorpb.GetSubsInfoResponse, error) {
+	rh.log.Debug("processor get subscriptions info request received")
+
+	repos, err := rh.subscriptionsInfoUsecase.Execute(ctx)
+	if err != nil {
+		return nil, mapError(err)
+	}
+
+	result := make([]*collectorpb.GetRepoResponse, 0, len(repos))
+	for _, repo := range repos {
+		result = append(result, &collectorpb.GetRepoResponse{
+			Name:            repo.Name,
+			Description:     repo.Description,
+			StargazersCount: int32(repo.StargazersCount),
+			ForksCount:      int32(repo.ForksCount),
+			CreatedAt:       timestamppb.New(repo.CreatedAt),
+		})
+	}
+
+	return &collectorpb.GetSubsInfoResponse{Repositories: result}, nil
 }
 
 func mapError(err error) error {

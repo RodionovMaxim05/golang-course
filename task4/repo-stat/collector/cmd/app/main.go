@@ -31,8 +31,15 @@ func run(ctx context.Context) error {
 
 	// handlers
 	githubClient := adapter.NewGitHubClient(cfg.GitHub, log)
+	subscriberClient, err := adapter.NewSubscriberClient(cfg.Subscriber.Address, log)
+	if err != nil {
+		log.Error("cannot init subscriber adapter", "error", err)
+		return err
+	}
+
 	getRepoUsecase := usecase.NewRepoUsecase(githubClient)
-	grpcHandler := controller.NewRepoHandler(log, getRepoUsecase)
+	getSubscriptionsInfoUsecase := usecase.NewGetSubscriptionsInfoUsecase(subscriberClient, githubClient)
+	grpcHandler := controller.NewRepoHandler(log, getRepoUsecase, getSubscriptionsInfoUsecase)
 
 	// server
 	srv, err := grpcserver.New(cfg.GRPC.Address)

@@ -39,7 +39,8 @@ func run(ctx context.Context) error {
 	// handlers
 	pingUseCase := usecase.NewPing()
 	getRepoUseCase := usecase.NewGetRepo(collectorClient)
-	processorServer := grpccontroller.NewServer(log, pingUseCase, getRepoUseCase)
+	getSubscriptionsInfoUseCase := usecase.NewGetSubscriptionsInfo(collectorClient)
+	processorServer := grpccontroller.NewServer(log, pingUseCase, getRepoUseCase, getSubscriptionsInfoUseCase)
 
 	// server
 	srv, err := grpcserver.New(cfg.GRPC.Address)
