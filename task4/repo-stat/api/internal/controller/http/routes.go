@@ -15,7 +15,7 @@ func AddRoutes(
 	subscribe *usecase.Subscribe,
 	unsubscribe *usecase.Unsubscribe,
 	getSubscriptions *usecase.GetSubscriptions,
-	subscriptionsInfo *usecase.SubscriptionsInfo,
+	subscriptionsInfo *usecase.GetSubscriptionsInfo,
 ) {
 	mux.Handle("GET /api/ping", NewPingHandler(log, ping))
 	mux.Handle("GET /api/repositories/info", NewGetRepoHandler(log, getRepo))

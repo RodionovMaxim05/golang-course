@@ -16,23 +16,21 @@ type subscribeRequest struct {
 // CreateSubscription godoc
 // @Summary Subscribe to the repository
 // @Description Subscribe to receive information about the GitHub repository
-// @Accept json
 // @Produce json
-// @Param request body subscribeRequest true "GitHub repository URL"
+// @Param url query string true "GitHub repository URL (e.g. https://github.com/golang/go)"
 // @Success 201 {object} dto.SubscriptionResponse
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /subscriptions [post]
 func NewSubscribeHandler(log *slog.Logger, subscribe *usecase.Subscribe) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req subscribeRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			log.Error("failed to decode subscribe request", "error", err)
-			writeJSONError(w, http.StatusBadRequest, "invalid request body")
+		url := r.URL.Query().Get("url")
+		if url == "" {
+			writeJSONError(w, http.StatusBadRequest, "url is required")
 			return
 		}
 
-		owner, repo, err := parseGitHubURL(req.URL)
+		owner, repo, err := parseGitHubURL(url)
 		if err != nil {
 			log.Error("failed to parse github url", "error", err)
 			writeJSONError(w, http.StatusBadRequest, "failed to parse github url")
@@ -94,6 +92,10 @@ func NewUnsubscribeHandler(log *slog.Logger, unsubscribe *usecase.Unsubscribe) h
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
+		err = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+		if err != nil {
+			log.Error("failed to write unsubscription response", "error", err)
+		}
 	}
 }
 
@@ -135,10 +137,10 @@ func NewListSubscriptionsHandler(log *slog.Logger, subscriptions *usecase.GetSub
 // SubscriptionsInfo godoc
 // @Summary Get subscribed repositories info
 // @Description Retrieve aggregated information for all subscribed repositories
-// @Success 200 {array} map[string]interface{}
+// @Success 200 {array} dto.RepoInfoResponse
 // @Failure 500 {object} map[string]string
 // @Router /subscriptions/info [get]
-func NewSubscriptionsInfoHandler(log *slog.Logger, subscriptionsInfo *usecase.SubscriptionsInfo) http.HandlerFunc {
+func NewSubscriptionsInfoHandler(log *slog.Logger, subscriptionsInfo *usecase.GetSubscriptionsInfo) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		resp, err := subscriptionsInfo.Execute(r.Context())
 		if err != nil {
@@ -148,7 +150,7 @@ func NewSubscriptionsInfoHandler(log *slog.Logger, subscriptionsInfo *usecase.Su
 			return
 		}
 
-		result := make([]map[string]interface{}, 0, len(resp))
+		result := make([]dto.RepoInfoResponse, 0, len(resp))
 		for _, item := range resp {
 			result = append(result, mapRepoResponse(item))
 		}

@@ -28,7 +28,7 @@ func NewHandler(ctx context.Context, log *slog.Logger, cfg config.Config) (http.
 	subscribeUseCase := usecase.NewSubscriber(subscriberClient)
 	unsubscribeUseCase := usecase.NewUnsubscriber(subscriberClient)
 	getSubscriptionsUseCase := usecase.NewGetSubscriptions(subscriberClient)
-	subscriptionsInfoUseCase := usecase.NewSubscriptionsInfo(subscriberClient, processorClient)
+	subscriptionsInfoUseCase := usecase.NewGetSubscriptionsInfo(processorClient)
 	getRepoUseCase := usecase.NewGetRepo(processorClient)
 
 	mux := http.NewServeMux()
@@ -43,6 +43,5 @@ func NewHandler(ctx context.Context, log *slog.Logger, cfg config.Config) (http.
 		subscriptionsInfoUseCase,
 	)
 
-	var handler http.Handler = mux
-	return handler, nil
+	return mux, nil
 }

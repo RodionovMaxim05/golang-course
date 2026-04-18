@@ -7,14 +7,15 @@ import (
 	"time"
 
 	"repo-stat/api/internal/domain"
+	"repo-stat/api/internal/dto"
 	"repo-stat/api/internal/usecase"
 )
 
 // GetRepo godoc
 // @Summary Get repository info
 // @Description Get basic information about a GitHub repository
-// @Param url query string true "GitHub repository URL"
-// @Success 200 {object} map[string]interface{}
+// @Param url query string true "GitHub repository URL (e.g. https://github.com/golang/go)"
+// @Success 200 {object} dto.RepoInfoResponse
 // @Failure 400 {string} string
 // @Failure 500 {string} string
 // @Router /api/repositories/info [get]
@@ -47,12 +48,12 @@ func NewGetRepoHandler(log *slog.Logger, getRepo *usecase.GetRepo) http.HandlerF
 	}
 }
 
-func mapRepoResponse(resp domain.Repository) map[string]interface{} {
-	return map[string]interface{}{
-		"full_name":   resp.Owner + "/" + resp.Repo,
-		"description": resp.Description,
-		"stars":       resp.Stargazers,
-		"forks":       resp.Forks,
-		"created_at":  resp.CreatedAt.Format(time.RFC3339),
+func mapRepoResponse(resp domain.Repository) dto.RepoInfoResponse {
+	return dto.RepoInfoResponse{
+		FullName:    resp.Owner + "/" + resp.Repo,
+		Description: resp.Description,
+		Stars:       resp.Stargazers,
+		Forks:       resp.Forks,
+		CreatedAt:   resp.CreatedAt.Format(time.RFC3339),
 	}
 }

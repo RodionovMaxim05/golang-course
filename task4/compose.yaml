@@ -108,7 +108,7 @@ services:
       - ./repo-stat/collector/config/config.yaml:/config.yaml
     environment:
       - LISTEN_ADDRESS=:8082
-      - SUBSCRIBER_ADDRESS=collector:8081
+      - SUBSCRIBER_ADDRESS=subscriber:8081
 
   tests:
     image: tests:latest

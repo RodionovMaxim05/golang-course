@@ -6,32 +6,20 @@ import (
 	"repo-stat/api/internal/domain"
 )
 
-type SubscriptionsInfo struct {
-	subscriber SubscriptionsGetter
-	repoGetter RepoGetter
+type SubscriptionsInfoGetter interface {
+	GetSubscriptionsInfo(ctx context.Context) ([]domain.Repository, error)
 }
 
-func NewSubscriptionsInfo(subscriber SubscriptionsGetter, repoGetter RepoGetter) *SubscriptionsInfo {
-	return &SubscriptionsInfo{
-		subscriber: subscriber,
-		repoGetter: repoGetter,
+type GetSubscriptionsInfo struct {
+	subsInfoGetter SubscriptionsInfoGetter
+}
+
+func NewGetSubscriptionsInfo(subsInfoGetter SubscriptionsInfoGetter) *GetSubscriptionsInfo {
+	return &GetSubscriptionsInfo{
+		subsInfoGetter: subsInfoGetter,
 	}
 }
 
-func (s *SubscriptionsInfo) Execute(ctx context.Context) ([]domain.Repository, error) {
-	subscriptions, err := s.subscriber.GetSubscriptions(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	results := make([]domain.Repository, 0, len(subscriptions))
-	for _, sub := range subscriptions {
-		repoInfo, err := s.repoGetter.GetRepo(ctx, sub.Owner, sub.Repo)
-		if err != nil {
-			return nil, err
-		}
-		results = append(results, repoInfo)
-	}
-
-	return results, nil
+func (gsi *GetSubscriptionsInfo) Execute(ctx context.Context) ([]domain.Repository, error) {
+	return gsi.subsInfoGetter.GetSubscriptionsInfo(ctx)
 }
