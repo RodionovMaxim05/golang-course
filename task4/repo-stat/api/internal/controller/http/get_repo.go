@@ -50,7 +50,7 @@ func NewGetRepoHandler(log *slog.Logger, getRepo *usecase.GetRepo) http.HandlerF
 
 func mapRepoResponse(resp domain.Repository) dto.RepoInfoResponse {
 	return dto.RepoInfoResponse{
-		FullName:    resp.Owner + "/" + resp.Repo,
+		FullName:    resp.FullName,
 		Description: resp.Description,
 		Stars:       resp.Stargazers,
 		Forks:       resp.Forks,

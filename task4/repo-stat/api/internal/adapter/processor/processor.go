@@ -57,8 +57,7 @@ func (c *Client) GetRepo(ctx context.Context, name, repo string) (domain.Reposit
 	}
 
 	return domain.Repository{
-		Owner:       resp.Name,
-		Repo:        resp.Repo,
+		FullName:    resp.FullName,
 		Description: resp.Description,
 		Stargazers:  int(resp.StargazersCount),
 		Forks:       int(resp.ForksCount),
@@ -78,8 +77,7 @@ func (c *Client) GetSubscriptionsInfo(ctx context.Context) ([]domain.Repository,
 	result := make([]domain.Repository, 0, len(resp.Repositories))
 	for _, item := range resp.Repositories {
 		result = append(result, domain.Repository{
-			Owner:       item.Name,
-			Repo:        item.Repo,
+			FullName:    item.FullName,
 			Description: item.Description,
 			Stargazers:  int(item.StargazersCount),
 			Forks:       int(item.ForksCount),

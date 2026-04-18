@@ -3,7 +3,7 @@ package domain
 import "time"
 
 type Repository struct {
-	Name            string
+	FullName        string
 	Description     string
 	StargazersCount int
 	ForksCount      int

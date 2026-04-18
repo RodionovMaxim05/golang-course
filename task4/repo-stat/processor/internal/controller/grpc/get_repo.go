@@ -15,8 +15,7 @@ func (s *Server) GetRepo(ctx context.Context, req *processorpb.GetRepoRequest) (
 	}
 
 	return &processorpb.GetRepoResponse{
-		Name:            resp.Name,
-		Repo:            resp.Repo,
+		FullName:        resp.FullName,
 		Description:     resp.Description,
 		StargazersCount: resp.StargazersCount,
 		ForksCount:      resp.ForksCount,
