@@ -2,10 +2,11 @@ package usecase
 
 import (
 	"context"
+	"repo-stat/api/internal/domain"
 )
 
 type Subscriber interface {
-	Subscribe(ctx context.Context, owner, repo string) error
+	Subscribe(ctx context.Context, owner, repo string) (*domain.Subscription, error)
 }
 
 type Subscribe struct {
@@ -18,6 +19,6 @@ func NewSubscriber(subscriber Subscriber) *Subscribe {
 	}
 }
 
-func (s *Subscribe) Execute(ctx context.Context, owner, repo string) error {
+func (s *Subscribe) Execute(ctx context.Context, owner, repo string) (*domain.Subscription, error) {
 	return s.subscriber.Subscribe(ctx, owner, repo)
 }

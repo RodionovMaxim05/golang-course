@@ -44,7 +44,7 @@ func (c *Client) Ping(ctx context.Context) domain.PingStatus {
 	return domain.PingStatusUp
 }
 
-func (c *Client) Subscribe(ctx context.Context, owner, repo string) error {
+func (c *Client) Subscribe(ctx context.Context, owner, repo string) (*domain.Subscription, error) {
 	req := &subscriberpb.SubscribeRequest{
 		Subscription: &subscriberpb.Subscription{
 			Owner: owner,
@@ -52,13 +52,17 @@ func (c *Client) Subscribe(ctx context.Context, owner, repo string) error {
 		},
 	}
 
-	_, err := c.pb.Subscribe(ctx, req)
+	resp, err := c.pb.Subscribe(ctx, req)
 	if err != nil {
 		c.log.Error("subscriber subscribe failed", "error", err)
-		return grpcAdapter.ErrToDomain(err)
+		return nil, grpcAdapter.ErrToDomain(err)
 	}
 
-	return nil
+	return &domain.Subscription{
+		Owner:     resp.Subscription.Owner,
+		Repo:      resp.Subscription.Repo,
+		CreatedAt: resp.Subscription.CreatedAt.AsTime(),
+	}, nil
 }
 
 func (c *Client) Unsubscribe(ctx context.Context, owner, repo string) error {
@@ -87,7 +91,11 @@ func (c *Client) GetSubscriptions(ctx context.Context) ([]domain.Subscription, e
 
 	subs := make([]domain.Subscription, 0, len(resp.Subscriptions))
 	for _, s := range resp.Subscriptions {
-		subs = append(subs, domain.Subscription{Owner: s.Owner, Repo: s.Repo})
+		subs = append(subs, domain.Subscription{
+			Owner:     s.Owner,
+			Repo:      s.Repo,
+			CreatedAt: s.CreatedAt.AsTime(),
+		})
 	}
 
 	return subs, nil
