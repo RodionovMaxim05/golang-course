@@ -42,7 +42,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "GitHub repository URL",
+                        "description": "GitHub repository URL (e.g. https://github.com/golang/go)",
                         "name": "url",
                         "in": "query",
                         "required": true
@@ -52,8 +52,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/repo-stat_api_internal_dto.RepoInfoResponse"
                         }
                     },
                     "400": {
@@ -98,22 +97,17 @@ const docTemplate = `{
             },
             "post": {
                 "description": "Subscribe to receive information about the GitHub repository",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
                 "summary": "Subscribe to the repository",
                 "parameters": [
                     {
-                        "description": "GitHub repository URL",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/internal_controller_http.subscribeRequest"
-                        }
+                        "type": "string",
+                        "description": "GitHub repository URL (e.g. https://github.com/golang/go)",
+                        "name": "url",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -154,8 +148,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "object",
-                                "additionalProperties": true
+                                "$ref": "#/definitions/repo-stat_api_internal_dto.RepoInfoResponse"
                             }
                         }
                     },
@@ -222,14 +215,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "internal_controller_http.subscribeRequest": {
-            "type": "object",
-            "properties": {
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
         "repo-stat_api_internal_dto.PingResponse": {
             "type": "object",
             "properties": {
@@ -241,6 +226,26 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string"
+                }
+            }
+        },
+        "repo-stat_api_internal_dto.RepoInfoResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "forks": {
+                    "type": "integer"
+                },
+                "full_name": {
+                    "type": "string"
+                },
+                "stars": {
+                    "type": "integer"
                 }
             }
         },
