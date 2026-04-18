@@ -9,10 +9,6 @@ import (
 	"repo-stat/api/internal/usecase"
 )
 
-type subscribeRequest struct {
-	URL string `json:"url"`
-}
-
 // CreateSubscription godoc
 // @Summary Subscribe to the repository
 // @Description Subscribe to receive information about the GitHub repository
