@@ -56,8 +56,7 @@ func (c *Client) GetSubscriptionsInfo(ctx context.Context, req *processorpb.GetS
 	repositories := make([]*processorpb.GetRepoResponse, 0, len(resp.Repositories))
 	for _, repo := range resp.Repositories {
 		repositories = append(repositories, &processorpb.GetRepoResponse{
-			Name:            repo.Name,
-			Repo:            repo.Repo,
+			FullName:        repo.FullName,
 			Description:     repo.Description,
 			StargazersCount: repo.StargazersCount,
 			ForksCount:      repo.ForksCount,

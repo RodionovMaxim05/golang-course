@@ -28,7 +28,7 @@ func NewGitHubClient(cfg Config, log *slog.Logger) *GitHubClient {
 }
 
 type RepoInfo struct {
-	Name            string    `json:"name"`
+	FullName        string    `json:"full_name"`
 	Description     string    `json:"description"`
 	StargazersCount int       `json:"stargazers_count"`
 	ForksCount      int       `json:"forks_count"`
@@ -69,7 +69,7 @@ func (gc *GitHubClient) GetRepo(ctx context.Context, owner, name string) (domain
 	gc.log.Debug("repository fetched successfully", "owner", owner, "repo", name, "stars", info.StargazersCount, "created_at", info.CreatedAt)
 
 	return domain.Repository{
-		Name:            info.Name,
+		FullName:        info.FullName,
 		Description:     info.Description,
 		StargazersCount: info.StargazersCount,
 		ForksCount:      info.ForksCount,
