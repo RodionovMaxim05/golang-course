@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	collectorpb "repo-stat/proto/collector"
+	processorpb "repo-stat/proto/processor"
 )
 
 type Client struct {
@@ -43,6 +44,28 @@ func (c *Client) GetRepo(ctx context.Context, name, repo string) (*collectorpb.G
 		return nil, err
 	}
 	return resp, nil
+}
+
+func (c *Client) GetSubscriptionsInfo(ctx context.Context, req *processorpb.GetSubsInfoRequest) (*processorpb.GetSubsInfoResponse, error) {
+	resp, err := c.pb.GetSubscriptionsInfo(ctx, &collectorpb.GetSubsInfoRequest{})
+	if err != nil {
+		c.log.Error("collector get subscriptions info failed", "error", err)
+		return nil, err
+	}
+
+	repositories := make([]*processorpb.GetRepoResponse, 0, len(resp.Repositories))
+	for _, repo := range resp.Repositories {
+		repositories = append(repositories, &processorpb.GetRepoResponse{
+			Name:            repo.Name,
+			Repo:            repo.Repo,
+			Description:     repo.Description,
+			StargazersCount: repo.StargazersCount,
+			ForksCount:      repo.ForksCount,
+			CreatedAt:       repo.CreatedAt,
+		})
+	}
+
+	return &processorpb.GetSubsInfoResponse{Repositories: repositories}, nil
 }
 
 func (c *Client) Close() error {

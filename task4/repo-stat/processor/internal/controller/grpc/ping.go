@@ -10,16 +10,18 @@ import (
 
 type Server struct {
 	processorpb.UnimplementedProcessorServer
-	log     *slog.Logger
-	ping    *usecase.Ping
-	getRepo *usecase.GetRepo
+	log                *slog.Logger
+	ping               *usecase.Ping
+	getRepo            *usecase.GetRepo
+	getSubscriptionsInfo *usecase.GetSubscriptionsInfo
 }
 
-func NewServer(log *slog.Logger, ping *usecase.Ping, getRepo *usecase.GetRepo) *Server {
+func NewServer(log *slog.Logger, ping *usecase.Ping, getRepo *usecase.GetRepo, getSubscriptionsInfo *usecase.GetSubscriptionsInfo) *Server {
 	return &Server{
-		log:     log,
-		ping:    ping,
-		getRepo: getRepo,
+		log:                log,
+		ping:               ping,
+		getRepo:            getRepo,
+		getSubscriptionsInfo: getSubscriptionsInfo,
 	}
 }
 

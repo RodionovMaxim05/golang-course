@@ -9,6 +9,7 @@ option go_package = "repo-stat/proto/gen/go/processor/v1;processorv1";
 service Processor {
   rpc Ping(PingRequest) returns (PingResponse);
   rpc GetRepo(GetRepoRequest) returns (GetRepoResponse);
+  rpc GetSubscriptionsInfo(GetSubsInfoRequest) returns (GetSubsInfoResponse);
 }
 
 message PingRequest {
@@ -30,4 +31,11 @@ message GetRepoResponse {
   int32 stargazers_count = 4;
   int32 forks_count = 5;
   google.protobuf.Timestamp created_at = 6;
+}
+
+message GetSubsInfoRequest {
+}
+
+message GetSubsInfoResponse {
+  repeated GetRepoResponse repositories = 1;
 }
