@@ -21,25 +21,25 @@ func NewSubscriptionService(githubClient GitHubChecker, repository domain.Subscr
 }
 
 func (s *Subscribe) Execute(ctx context.Context, owner, repo string) (*domain.SubscriptionResponse, error) {
-	subscription := &domain.Subscription{Owner: owner, Repo: repo}
-
 	// Check if repository exists on GitHub
 	exists, err := s.githubClient.RepoExists(ctx, owner, repo)
 	if err != nil {
-		return &domain.SubscriptionResponse{}, fmt.Errorf("check exists: %w", err)
+		return nil, fmt.Errorf("check exists: %w", err)
 	}
 	if !exists {
-		return &domain.SubscriptionResponse{}, domain.ErrRepoNotFound
+		return nil, domain.ErrRepoNotFound
 	}
 
 	// Check if already subscribed
 	alreadySubscribed, err := s.repo.Exists(ctx, owner, repo)
 	if err != nil {
-		return &domain.SubscriptionResponse{}, fmt.Errorf("check subscription: %w", err)
+		return nil, fmt.Errorf("check subscription: %w", err)
 	}
 	if alreadySubscribed {
-		return &domain.SubscriptionResponse{}, domain.ErrAlreadySubscribed
+		return nil, domain.ErrAlreadySubscribed
 	}
+
+	subscription := &domain.Subscription{Owner: owner, Repo: repo}
 
 	return s.repo.Create(ctx, subscription)
 }

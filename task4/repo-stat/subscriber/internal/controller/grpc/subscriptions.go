@@ -2,14 +2,10 @@ package grpc
 
 import (
 	"context"
-	"errors"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	subscriberpb "repo-stat/proto/subscriber"
-	"repo-stat/subscriber/internal/domain"
 )
 
 func (s *Server) Subscribe(ctx context.Context, req *subscriberpb.SubscribeRequest) (*subscriberpb.SubscribeResponse, error) {
@@ -58,19 +54,4 @@ func (s *Server) GetSubscriptions(ctx context.Context, _ *subscriberpb.GetSubsRe
 	}
 
 	return &subscriberpb.GetSubsResponse{Subscriptions: result}, nil
-}
-
-func grpcError(err error) error {
-	switch {
-	case errors.Is(err, domain.ErrInvalidArgument):
-		return status.Error(codes.InvalidArgument, err.Error())
-	case errors.Is(err, domain.ErrRepoNotFound), errors.Is(err, domain.ErrNotFound):
-		return status.Error(codes.NotFound, err.Error())
-	case errors.Is(err, domain.ErrAlreadySubscribed):
-		return status.Error(codes.AlreadyExists, err.Error())
-	case errors.Is(err, domain.ErrRateLimited):
-		return status.Error(codes.ResourceExhausted, err.Error())
-	default:
-		return status.Error(codes.Internal, err.Error())
-	}
 }
