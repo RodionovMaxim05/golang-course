@@ -1,9 +1,6 @@
 name: CI
 
-on:
-  pull_request:
-  push:
-    branches: [main, master]
+on: [push, pull_request]
 
 permissions:
   contents: read
@@ -11,18 +8,21 @@ permissions:
 jobs:
   lint-and-unit:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        task: [task3, task4]
     defaults:
       run:
-      # // TODO: other folders
-        working-directory: task3
+        working-directory: ${{ matrix.task }}
     steps:
       - uses: actions/checkout@v5
 
       - uses: actions/setup-go@v5
         with:
-          go-version-file: task3/repo-stat/go.mod
+          go-version-file: ${{ matrix.task }}/repo-stat/go.mod
           cache: true
-          cache-dependency-path: task3/repo-stat/go.sum
+          cache-dependency-path: ${{ matrix.task }}/repo-stat/go.sum
 
       - name: Install protoc
         run: |
@@ -46,9 +46,13 @@ jobs:
   integration:
     runs-on: ubuntu-latest
     needs: lint-and-unit
+    strategy:
+      fail-fast: false
+      matrix:
+        task: [task3, task4]
     defaults:
       run:
-        working-directory: task3
+        working-directory: ${{ matrix.task }}
     steps:
       - uses: actions/checkout@v5
 

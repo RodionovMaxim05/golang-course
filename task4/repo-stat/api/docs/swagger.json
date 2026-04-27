@@ -1,0 +1,272 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API Gateway for repository statistics",
+        "title": "Repo Stat API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:28080",
+    "basePath": "/",
+    "paths": {
+        "/api/ping": {
+            "get": {
+                "description": "Get ping status of processor and subscriber",
+                "summary": "Ping services",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/repo-stat_api_internal_dto.PingResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/repo-stat_api_internal_dto.PingResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/repositories/info": {
+            "get": {
+                "description": "Get basic information about a GitHub repository",
+                "summary": "Get repository info",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "GitHub repository URL (e.g. https://github.com/golang/go)",
+                        "name": "url",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/repo-stat_api_internal_dto.RepoInfoResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/subscriptions": {
+            "get": {
+                "description": "Return all subscribed GitHub repositories",
+                "summary": "Get current subscription list",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/repo-stat_api_internal_dto.SubscriptionResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Subscribe to receive information about the GitHub repository",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Subscribe to the repository",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "GitHub repository URL (e.g. https://github.com/golang/go)",
+                        "name": "url",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/repo-stat_api_internal_dto.SubscriptionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/subscriptions/info": {
+            "get": {
+                "description": "Retrieve aggregated information for all subscribed repositories",
+                "summary": "Get subscribed repositories info",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/repo-stat_api_internal_dto.RepoInfoResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/subscriptions/{owner}/{repo}": {
+            "delete": {
+                "description": "Remove subscription for GitHub repository",
+                "summary": "Unsubscribe from the repository",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Repository owner",
+                        "name": "owner",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Repository name",
+                        "name": "repo",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "repo-stat_api_internal_dto.PingResponse": {
+            "type": "object",
+            "properties": {
+                "services": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/repo-stat_api_internal_dto.ServiceStatus"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "repo-stat_api_internal_dto.RepoInfoResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "forks": {
+                    "type": "integer"
+                },
+                "full_name": {
+                    "type": "string"
+                },
+                "stars": {
+                    "type": "integer"
+                }
+            }
+        },
+        "repo-stat_api_internal_dto.ServiceStatus": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "repo-stat_api_internal_dto.SubscriptionResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "owner": {
+                    "type": "string"
+                },
+                "repo": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
