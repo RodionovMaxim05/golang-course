@@ -3,11 +3,11 @@ package usecase
 import (
 	"context"
 
-	processorpb "repo-stat/proto/processor"
+	"repo-stat/api/internal/domain"
 )
 
 type RepoGetter interface {
-	GetRepo(ctx context.Context, name, repo string) (*processorpb.GetRepoResponse, error)
+	GetRepo(ctx context.Context, name, repo string) (domain.Repository, error)
 }
 
 type GetRepo struct {
@@ -20,6 +20,6 @@ func NewGetRepo(repoGetter RepoGetter) *GetRepo {
 	}
 }
 
-func (gr *GetRepo) Execute(ctx context.Context, name, repo string) (*processorpb.GetRepoResponse, error) {
+func (gr *GetRepo) Execute(ctx context.Context, name, repo string) (domain.Repository, error) {
 	return gr.repoGetter.GetRepo(ctx, name, repo)
 }

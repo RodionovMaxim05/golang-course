@@ -9,11 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
+	"repo-stat/api/internal/domain"
+	"repo-stat/api/internal/dto"
 	"repo-stat/api/internal/usecase"
-	processorpb "repo-stat/proto/processor"
 )
 
 // GetRepo godoc
@@ -35,39 +33,21 @@ func NewGetRepoHandler(log *slog.Logger, getRepo *usecase.GetRepo) http.HandlerF
 
 		resp, err := getRepo.Execute(r.Context(), owner, repo)
 		if err != nil {
-			st := status.Convert(err)
-			httpCode := grpcStatusToHTTP(st.Code())
-
-			log.Error("failed to get repo", "error", err, "grpc_code", st.Code())
-			writeJSONError(w, httpCode, st.Message())
+			httpCode := DomainErrToHTTP(err)
+			log.Error("failed to get repo", "error", err)
+			writeJSONError(w, httpCode, err.Error())
 			return
 		}
 
 		response := mapRepoResponse(resp)
 
-		log.Info("repository info fetched successfully", "owner", owner, "repo", repo, "stars", resp.StargazersCount, "forks", resp.ForksCount)
+		log.Info("repository info fetched successfully", "owner", owner, "repo", repo, "stars", resp.Stargazers, "forks", resp.Forks)
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-
 		if err := json.NewEncoder(w).Encode(response); err != nil {
 			log.Error("failed to write repo response", "error", err)
 		}
-	}
-}
-
-func grpcStatusToHTTP(code codes.Code) int {
-	switch code {
-	case codes.NotFound:
-		return http.StatusNotFound
-	case codes.ResourceExhausted:
-		return http.StatusTooManyRequests
-	case codes.Unavailable:
-		return http.StatusServiceUnavailable
-	case codes.InvalidArgument:
-		return http.StatusBadRequest
-	default:
-		return http.StatusInternalServerError
 	}
 }
 
@@ -85,13 +65,13 @@ func parseGitHubURL(rawURL string) (owner, repo string, err error) {
 	return parts[0], parts[1], nil
 }
 
-func mapRepoResponse(resp *processorpb.GetRepoResponse) map[string]interface{} {
-	return map[string]interface{}{
-		"full_name":   resp.Name + "/" + resp.Repo,
-		"description": resp.Description,
-		"stars":       resp.StargazersCount,
-		"forks":       resp.ForksCount,
-		"created_at":  resp.CreatedAt.AsTime().Format(time.RFC3339),
+func mapRepoResponse(resp domain.Repository) dto.RepoInfoResponse {
+	return dto.RepoInfoResponse{
+		FullName:    resp.FullName,
+		Description: resp.Description,
+		Stars:       resp.Stargazers,
+		Forks:       resp.Forks,
+		CreatedAt:   resp.CreatedAt.Format(time.RFC3339),
 	}
 }
 

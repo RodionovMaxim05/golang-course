@@ -8,8 +8,8 @@ import (
 	"os/signal"
 
 	"repo-stat/collector/config"
-	"repo-stat/collector/internal/adapter"
-	"repo-stat/collector/internal/controller"
+	"repo-stat/collector/internal/adapter/github"
+	"repo-stat/collector/internal/controller/grpc"
 	"repo-stat/collector/internal/usecase"
 	"repo-stat/platform/grpcserver"
 	"repo-stat/platform/logger"
@@ -30,9 +30,9 @@ func run(ctx context.Context) error {
 	log.Debug("debug messages are enabled")
 
 	// handlers
-	githubClient := adapter.NewGitHubClient(cfg.GitHub, log)
+	githubClient := github.NewGitHubClient(cfg.GitHub, log)
 	getRepoUsecase := usecase.NewRepoUsecase(githubClient)
-	grpcHandler := controller.NewRepoHandler(log, getRepoUsecase)
+	grpcHandler := grpc.NewRepoHandler(log, getRepoUsecase)
 
 	// server
 	srv, err := grpcserver.New(cfg.GRPC.Address)

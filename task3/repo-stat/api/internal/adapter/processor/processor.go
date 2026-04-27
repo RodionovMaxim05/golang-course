@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	grpcAdapter "repo-stat/api/internal/adapter/grpc"
 	"repo-stat/api/internal/domain"
 	processorpb "repo-stat/proto/processor"
 )
@@ -43,17 +44,25 @@ func (c *Client) Ping(ctx context.Context) domain.PingStatus {
 	return domain.PingStatusUp
 }
 
-func (c *Client) GetRepo(ctx context.Context, name, repo string) (*processorpb.GetRepoResponse, error) {
+func (c *Client) GetRepo(ctx context.Context, name, repo string) (domain.Repository, error) {
 	req := &processorpb.GetRepoRequest{
 		Name: name,
 		Repo: repo,
 	}
+
 	resp, err := c.pb.GetRepo(ctx, req)
 	if err != nil {
 		c.log.Error("processor get repo failed", "error", err)
-		return nil, err
+		return domain.Repository{}, grpcAdapter.ErrToDomain(err)
 	}
-	return resp, nil
+
+	return domain.Repository{
+		FullName:    resp.FullName,
+		Description: resp.Description,
+		Stargazers:  int(resp.StargazersCount),
+		Forks:       int(resp.ForksCount),
+		CreatedAt:   resp.CreatedAt.AsTime(),
+	}, nil
 }
 
 func (c *Client) Close() error {
