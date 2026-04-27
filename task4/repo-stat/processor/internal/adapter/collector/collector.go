@@ -7,8 +7,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"repo-stat/processor/internal/domain"
 	collectorpb "repo-stat/proto/collector"
-	processorpb "repo-stat/proto/processor"
 )
 
 type Client struct {
@@ -33,7 +33,7 @@ func NewClient(address string, log *slog.Logger) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) GetRepo(ctx context.Context, name, repo string) (*collectorpb.GetRepoResponse, error) {
+func (c *Client) GetRepo(ctx context.Context, name, repo string) (*domain.Repository, error) {
 	req := &collectorpb.GetRepoRequest{
 		Name: name,
 		Repo: repo,
@@ -43,28 +43,35 @@ func (c *Client) GetRepo(ctx context.Context, name, repo string) (*collectorpb.G
 		c.log.Error("collector get repo failed", "error", err)
 		return nil, err
 	}
-	return resp, nil
+
+	return &domain.Repository{
+		FullName:        resp.FullName,
+		Description:     resp.Description,
+		StargazersCount: int(resp.StargazersCount),
+		ForksCount:      int(resp.ForksCount),
+		CreatedAt:       resp.CreatedAt.AsTime(),
+	}, nil
 }
 
-func (c *Client) GetSubscriptionsInfo(ctx context.Context, req *processorpb.GetSubsInfoRequest) (*processorpb.GetSubsInfoResponse, error) {
+func (c *Client) GetSubscriptionsInfo(ctx context.Context) ([]*domain.Repository, error) {
 	resp, err := c.pb.GetSubscriptionsInfo(ctx, &collectorpb.GetSubsInfoRequest{})
 	if err != nil {
 		c.log.Error("collector get subscriptions info failed", "error", err)
 		return nil, err
 	}
 
-	repositories := make([]*processorpb.GetRepoResponse, 0, len(resp.Repositories))
+	repositories := make([]*domain.Repository, 0, len(resp.Repositories))
 	for _, repo := range resp.Repositories {
-		repositories = append(repositories, &processorpb.GetRepoResponse{
+		repositories = append(repositories, &domain.Repository{
 			FullName:        repo.FullName,
 			Description:     repo.Description,
-			StargazersCount: repo.StargazersCount,
-			ForksCount:      repo.ForksCount,
-			CreatedAt:       repo.CreatedAt,
+			StargazersCount: int(repo.StargazersCount),
+			ForksCount:      int(repo.ForksCount),
+			CreatedAt:       repo.CreatedAt.AsTime(),
 		})
 	}
 
-	return &processorpb.GetSubsInfoResponse{Repositories: repositories}, nil
+	return repositories, nil
 }
 
 func (c *Client) Close() error {
