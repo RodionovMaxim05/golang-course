@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"repo-stat/processor/internal/domain"
 	collectorpb "repo-stat/proto/collector"
 )
 
@@ -32,17 +33,25 @@ func NewClient(address string, log *slog.Logger) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) GetRepo(ctx context.Context, name, repo string) (*collectorpb.GetRepoResponse, error) {
+func (c *Client) GetRepo(ctx context.Context, name, repo string) (*domain.Repository, error) {
 	req := &collectorpb.GetRepoRequest{
 		Name: name,
 		Repo: repo,
 	}
+
 	resp, err := c.pb.GetRepo(ctx, req)
 	if err != nil {
 		c.log.Error("collector get repo failed", "error", err)
 		return nil, err
 	}
-	return resp, nil
+
+	return &domain.Repository{
+		FullName:        resp.FullName,
+		Description:     resp.Description,
+		StargazersCount: int(resp.StargazersCount),
+		ForksCount:      int(resp.ForksCount),
+		CreatedAt:       resp.CreatedAt.AsTime(),
+	}, nil
 }
 
 func (c *Client) Close() error {

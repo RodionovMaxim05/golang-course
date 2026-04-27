@@ -1,7 +1,7 @@
 package config
 
 import (
-	"repo-stat/collector/internal/adapter"
+	"repo-stat/collector/internal/adapter/github"
 	"repo-stat/platform/env"
 	"repo-stat/platform/grpcserver"
 	"repo-stat/platform/logger"
@@ -13,7 +13,7 @@ type App struct {
 
 type Config struct {
 	App    App               `yaml:"app"`
-	GitHub adapter.Config    `yaml:"github"`
+	GitHub github.Config     `yaml:"github"`
 	GRPC   grpcserver.Config `yaml:"grpc"`
 	Logger logger.Config     `yaml:"logger"`
 }
