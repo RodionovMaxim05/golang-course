@@ -8,8 +8,9 @@ import (
 )
 
 type Config struct {
-	Address string        `yaml:"address" env:"LISTEN_ADDRESS" env-default:"localhost:8080"`
-	Timeout time.Duration `yaml:"timeout" env:"TIMEOUT" env-default:"5s"`
+	Address     string        `yaml:"address" env:"LISTEN_ADDRESS" env-default:"localhost:8080"`
+	Timeout     time.Duration `yaml:"timeout" env:"TIMEOUT" env-default:"5s"`
+	IdleTimeout time.Duration `yaml:"idle_timeout" env:"IDLE_TIMEOUT" env-default:"30s"`
 }
 
 type Server struct {
@@ -22,7 +23,7 @@ func New(cfg Config, handler http.Handler) *Server {
 			Addr:         cfg.Address,
 			ReadTimeout:  cfg.Timeout,
 			WriteTimeout: cfg.Timeout,
-			IdleTimeout:  30 * time.Second,
+			IdleTimeout:  cfg.IdleTimeout,
 			Handler:      handler,
 		},
 	}

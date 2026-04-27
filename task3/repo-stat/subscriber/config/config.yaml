@@ -7,6 +7,3 @@ grpc:
 
 logger:
   log_level: "DEBUG"
-
-services:
-  api: "localhost:8080"

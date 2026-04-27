@@ -1,0 +1,63 @@
+basePath: /
+definitions:
+  dto.PingResponse:
+    properties:
+      services:
+        items:
+          $ref: '#/definitions/dto.ServiceStatus'
+        type: array
+      status:
+        type: string
+    type: object
+  dto.ServiceStatus:
+    properties:
+      name:
+        type: string
+      status:
+        type: string
+    type: object
+host: localhost:28080
+info:
+  contact: {}
+  description: API Gateway for repository statistics
+  title: Repo Stat API
+  version: "1.0"
+paths:
+  /api/ping:
+    get:
+      description: Get ping status of processor and subscriber
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PingResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.PingResponse'
+      summary: Ping services
+  /api/repositories/info:
+    get:
+      description: Get basic information about a GitHub repository
+      parameters:
+      - description: GitHub repository URL
+        in: query
+        name: url
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get repository info
+swagger: "2.0"

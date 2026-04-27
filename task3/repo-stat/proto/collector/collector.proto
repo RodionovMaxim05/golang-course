@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package api;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "repo-stat/proto/gen/go/collector/v1;collectorv1";
+
+service RepoService {
+  rpc GetRepo(GetRepoRequest) returns (GetRepoResponse);
+}
+
+message GetRepoRequest {
+  string name = 1;
+  string repo = 2;
+}
+
+message GetRepoResponse {
+  string full_name = 1;
+  string description = 2;
+  int32 stargazers_count = 3;
+  int32 forks_count = 4;
+  google.protobuf.Timestamp created_at = 5;
+}

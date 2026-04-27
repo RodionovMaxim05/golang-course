@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+
 	"repo-stat/api/internal/domain"
 )
 
@@ -10,15 +11,19 @@ type Pinger interface {
 }
 
 type Ping struct {
-	pinger Pinger
+	subscriberPinger Pinger
+	processorPinger  Pinger
 }
 
-func NewPing(pinger Pinger) *Ping {
+func NewPing(subscriberPinger, processorPinger Pinger) *Ping {
 	return &Ping{
-		pinger: pinger,
+		subscriberPinger: subscriberPinger,
+		processorPinger:  processorPinger,
 	}
 }
 
-func (u *Ping) Execute(ctx context.Context) domain.PingStatus {
-	return u.pinger.Ping(ctx)
+func (u *Ping) Execute(ctx context.Context) (domain.PingStatus, domain.PingStatus) {
+	subscriberStatus := u.subscriberPinger.Ping(ctx)
+	processorStatus := u.processorPinger.Ping(ctx)
+	return subscriberStatus, processorStatus
 }

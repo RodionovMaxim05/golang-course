@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+
 	"repo-stat/platform/grpcserver"
 	"repo-stat/platform/logger"
 	subscriberpb "repo-stat/proto/subscriber"
