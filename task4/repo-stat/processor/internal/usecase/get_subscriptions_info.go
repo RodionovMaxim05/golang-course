@@ -3,11 +3,11 @@ package usecase
 import (
 	"context"
 
-	processorpb "repo-stat/proto/processor"
+	"repo-stat/processor/internal/domain"
 )
 
 type SubscriptionsInfoGetter interface {
-	GetSubscriptionsInfo(ctx context.Context, req *processorpb.GetSubsInfoRequest) (*processorpb.GetSubsInfoResponse, error)
+	GetSubscriptionsInfo(ctx context.Context) ([]*domain.Repository, error)
 }
 
 type GetSubscriptionsInfo struct {
@@ -18,6 +18,6 @@ func NewGetSubscriptionsInfo(client SubscriptionsInfoGetter) *GetSubscriptionsIn
 	return &GetSubscriptionsInfo{client: client}
 }
 
-func (gsi *GetSubscriptionsInfo) Execute(ctx context.Context) (*processorpb.GetSubsInfoResponse, error) {
-	return gsi.client.GetSubscriptionsInfo(ctx, &processorpb.GetSubsInfoRequest{})
+func (gsi *GetSubscriptionsInfo) Execute(ctx context.Context) ([]*domain.Repository, error) {
+	return gsi.client.GetSubscriptionsInfo(ctx)
 }

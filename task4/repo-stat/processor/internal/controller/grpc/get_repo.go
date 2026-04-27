@@ -4,6 +4,8 @@ import (
 	"context"
 
 	processorpb "repo-stat/proto/processor"
+
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (s *Server) GetRepo(ctx context.Context, req *processorpb.GetRepoRequest) (*processorpb.GetRepoResponse, error) {
@@ -17,8 +19,8 @@ func (s *Server) GetRepo(ctx context.Context, req *processorpb.GetRepoRequest) (
 	return &processorpb.GetRepoResponse{
 		FullName:        resp.FullName,
 		Description:     resp.Description,
-		StargazersCount: resp.StargazersCount,
-		ForksCount:      resp.ForksCount,
-		CreatedAt:       resp.CreatedAt,
+		StargazersCount: int32(resp.StargazersCount),
+		ForksCount:      int32(resp.ForksCount),
+		CreatedAt:       timestamppb.New(resp.CreatedAt),
 	}, nil
 }
