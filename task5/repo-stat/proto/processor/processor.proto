@@ -20,7 +20,7 @@ message PingResponse {
 }
 
 message GetRepoRequest {
-  string name = 1;
+  string owner = 1;
   string repo = 2;
 }
 

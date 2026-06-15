@@ -7,7 +7,7 @@ import "google/protobuf/timestamp.proto";
 option go_package = "repo-stat/proto/gen/go/collector/v1;collectorv1";
 
 message GetRepoRequest {
-  string name = 1;
+  string owner = 1;
   string repo = 2;
 }
 

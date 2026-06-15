@@ -26,20 +26,20 @@ func NewGetRepo(repoGetter RepoGetter, storage domain.DataStorage, log *slog.Log
 	}
 }
 
-func (gr *GetRepo) Execute(ctx context.Context, name, repo string) (*domain.Repository, error) {
-	fullName := fmt.Sprintf("%s/%s", name, repo)
+func (gr *GetRepo) Execute(ctx context.Context, owner, repo string) (*domain.Repository, error) {
+	fullName := fmt.Sprintf("%s/%s", owner, repo)
 
 	repoInfo, err := gr.dataStorage.GetRepo(ctx, fullName)
 	if err == nil {
-		gr.log.Debug("fetching repository from database", "owner", name, "repo", repo)
+		gr.log.Debug("fetching repository from database", "owner", owner, "repo", repo)
 		return repoInfo, nil
 	}
 	if errors.Is(err, domain.ErrNotFound) {
-		err = gr.repoGetter.SendRepoRequest(ctx, name, repo)
+		err = gr.repoGetter.SendRepoRequest(ctx, owner, repo)
 		if err != nil {
 			return nil, fmt.Errorf("send repo request: %w", err)
 		}
-		gr.log.Debug("send repo info request", "owner", name, "repo", repo)
+		gr.log.Debug("send repo info request", "owner", owner, "repo", repo)
 
 		return nil, domain.ErrAccepted
 	}

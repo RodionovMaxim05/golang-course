@@ -11,7 +11,7 @@ type SubscriberClient interface {
 }
 
 type GitHubClient interface {
-	GetRepo(ctx context.Context, owner, name string) (domain.Repository, error)
+	GetRepo(ctx context.Context, owner, repo string) (domain.Repository, error)
 }
 
 type KafkaResultProducer interface {
