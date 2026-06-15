@@ -7,7 +7,7 @@ import (
 )
 
 type SubscriptionsInfoGetter interface {
-	GetSubscriptionsInfo(ctx context.Context) ([]*domain.Repository, error)
+	GetAllRepos(ctx context.Context) ([]*domain.Repository, error)
 }
 
 type GetSubscriptionsInfo struct {
@@ -19,5 +19,5 @@ func NewGetSubscriptionsInfo(client SubscriptionsInfoGetter) *GetSubscriptionsIn
 }
 
 func (gsi *GetSubscriptionsInfo) Execute(ctx context.Context) ([]*domain.Repository, error) {
-	return gsi.client.GetSubscriptionsInfo(ctx)
+	return gsi.client.GetAllRepos(ctx)
 }

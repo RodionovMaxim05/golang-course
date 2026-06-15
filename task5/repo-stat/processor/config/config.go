@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"repo-stat/platform/env"
 	"repo-stat/platform/grpcserver"
 	"repo-stat/platform/logger"
@@ -14,11 +15,40 @@ type Services struct {
 	Collector string `yaml:"collector" env:"COLLECTOR_ADDRESS" env-default:"localhost:8082"`
 }
 
+type Kafka struct {
+	Address       string `yaml:"address" env:"KAFKA_ADDRESS" env-default:"kafka:9092"`
+	ProducerTopic string `yaml:"producer_topic" env:"KAFKA_PRODUCER_TOPIC" required:"true"`
+	ConsumerTopic string `yaml:"consumer_topic" env:"KAFKA_CONSUMER_TOPIC" required:"true"`
+	GroupID       string `yaml:"group_id" env:"KAFKA_GROUP_ID" env-default:"default-group"`
+}
+
+type Database struct {
+	Host     string `yaml:"host" env:"POSTGRES_HOST" env-default:"localhost"`
+	Port     int    `yaml:"port" env:"PROC_POSTGRES_PORT" env-default:"5432"`
+	User     string `yaml:"user" env:"PROC_POSTGRES_USER" env-default:"proc_user"`
+	Password string `yaml:"password" env:"PROC_POSTGRES_PASSWORD" env-default:"proc_password"`
+	Name     string `yaml:"name" env:"PROC_POSTGRES_DB" env-default:"processor_db"`
+	SSLMode  string `yaml:"sslmode" env:"POSTGRES_SSLMODE" env-default:"disable"`
+}
+
+func (d Database) URL() string {
+	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s",
+		d.User,
+		d.Password,
+		d.Host,
+		d.Port,
+		d.Name,
+		d.SSLMode,
+	)
+}
+
 type Config struct {
 	App      App               `yaml:"app"`
 	Services Services          `yaml:"services"`
 	GRPC     grpcserver.Config `yaml:"grpc"`
 	Logger   logger.Config     `yaml:"logger"`
+	Database Database          `yaml:"database"`
+	Kafka    Kafka             `yaml:"kafka"`
 }
 
 func MustLoad(path string) Config {
