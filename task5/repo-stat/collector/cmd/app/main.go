@@ -42,7 +42,11 @@ func run(ctx context.Context) error {
 
 	// kafka producer client
 	producerClient := kafkaAdapter.NewProducerClient(cfg.Kafka, log)
-	defer producerClient.Close()
+	defer func() {
+		if err := producerClient.Close(); err != nil {
+			log.Error("failed to close producer client", "error", err)
+		}
+	}()
 
 	// kafka consumer client
 	tasksReader := kafka.NewReader(kafka.ReaderConfig{
@@ -50,7 +54,11 @@ func run(ctx context.Context) error {
 		Topic:   cfg.Kafka.ConsumerTopic,
 		GroupID: cfg.Kafka.GroupID,
 	})
-	defer tasksReader.Close()
+	defer func() {
+		if err := tasksReader.Close(); err != nil {
+			log.Error("failed to close tasks reader", "error", err)
+		}
+	}()
 
 	getRepoUsecase := usecase.NewRepoUsecase(githubClient)
 	getSubscriptionsInfoUsecase := usecase.NewGetSubscriptionsInfoUsecase(subscriberClient, githubClient, producerClient)

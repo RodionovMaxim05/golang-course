@@ -47,11 +47,19 @@ func run(ctx context.Context) error {
 
 	// kafka producer client
 	producerClient := kafka.NewProducerClient(cfg.Kafka, log)
-	defer producerClient.Close()
+	defer func() {
+		if err := producerClient.Close(); err != nil {
+			log.Error("failed to close producer client", "error", err)
+		}
+	}()
 
 	// kafka consumer client
 	consumerClient := kafka.NewConsumerClient(cfg.Kafka, dbClient, log)
-	defer consumerClient.Close()
+	defer func() {
+		if err := consumerClient.Close(); err != nil {
+			log.Error("failed to close consumer client", "error", err)
+		}
+	}()
 
 	go consumerClient.StartConsumer(ctx)
 
