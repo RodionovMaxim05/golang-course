@@ -30,8 +30,8 @@ func NewProducerClient(cfg config.Kafka, log *slog.Logger) *ProducerClient {
 
 func (pc *ProducerClient) SendRepoRequest(ctx context.Context, owner, repo string) error {
 	getRepoRequest := &processorpb.GetRepoRequest{
-		Name: owner,
-		Repo: repo,
+		Owner: owner,
+		Repo:  repo,
 	}
 
 	pc.log.Debug("producer get request")

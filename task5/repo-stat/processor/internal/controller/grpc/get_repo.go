@@ -9,9 +9,9 @@ import (
 )
 
 func (s *Server) GetRepo(ctx context.Context, req *processorpb.GetRepoRequest) (*processorpb.GetRepoResponse, error) {
-	s.log.Debug("processor get repo request received", "name", req.Name, "repo", req.Repo)
+	s.log.Debug("processor get repo request received", "owner", req.Owner, "repo", req.Repo)
 
-	resp, err := s.getRepo.Execute(ctx, req.Name, req.Repo)
+	resp, err := s.getRepo.Execute(ctx, req.Owner, req.Repo)
 	if err != nil {
 		return nil, err
 	}

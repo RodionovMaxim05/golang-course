@@ -13,7 +13,7 @@ import (
 )
 
 type GetRepoUsecase interface {
-	Execute(ctx context.Context, owner, name string) (domain.Repository, error)
+	Execute(ctx context.Context, owner, repo string) (domain.Repository, error)
 }
 
 type ResultProducer interface {
@@ -64,12 +64,12 @@ func (rw *RepoWorker) Start(ctx context.Context) {
 			continue
 		}
 
-		rw.log.Debug("a task for collecting data from Kafka has been received", "owner", req.Name, "repo", req.Repo)
+		rw.log.Debug("a task for collecting data from Kafka has been received", "owner", req.Owner, "repo", req.Repo)
 
-		repo, err := rw.repoUsecase.Execute(ctx, req.Name, req.Repo)
+		repo, err := rw.repoUsecase.Execute(ctx, req.Owner, req.Repo)
 		if err != nil {
 			rw.log.Error("failed to collect data from GitHub API",
-				"owner", req.Name,
+				"owner", req.Owner,
 				"repo", req.Repo,
 				"err", err,
 			)

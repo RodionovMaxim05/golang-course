@@ -44,10 +44,10 @@ func (c *Client) Ping(ctx context.Context) domain.PingStatus {
 	return domain.PingStatusUp
 }
 
-func (c *Client) GetRepo(ctx context.Context, name, repo string) (domain.Repository, error) {
+func (c *Client) GetRepo(ctx context.Context, owner, repo string) (domain.Repository, error) {
 	req := &processorpb.GetRepoRequest{
-		Name: name,
-		Repo: repo,
+		Owner: owner,
+		Repo:  repo,
 	}
 
 	resp, err := c.pb.GetRepo(ctx, req)
