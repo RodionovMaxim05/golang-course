@@ -8,6 +8,12 @@ grpc:
 github:
   timeout: "5s"
 
+kafka:
+  address: "kafka:9092"
+  producer_topic: "repo-results"
+  consumer_topic: "repo-requests"
+  group_id: "collector-group"
+
 logger:
   log_level: "DEBUG"
 

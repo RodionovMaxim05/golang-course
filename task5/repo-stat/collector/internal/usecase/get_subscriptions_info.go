@@ -14,34 +14,44 @@ type GitHubClient interface {
 	GetRepo(ctx context.Context, owner, name string) (domain.Repository, error)
 }
 
+type KafkaResultProducer interface {
+	SendRepoResult(ctx context.Context, repo domain.Repository) error
+}
+
 type GetSubscriptionsInfoUsecase struct {
 	subscriberClient SubscriberClient
 	githubClient     GitHubClient
+	kafkaProducer    KafkaResultProducer
 }
 
-func NewGetSubscriptionsInfoUsecase(subscriberClient SubscriberClient, githubClient GitHubClient) *GetSubscriptionsInfoUsecase {
+func NewGetSubscriptionsInfoUsecase(subscriberClient SubscriberClient, githubClient GitHubClient, kafkaProducer KafkaResultProducer) *GetSubscriptionsInfoUsecase {
 	return &GetSubscriptionsInfoUsecase{
 		subscriberClient: subscriberClient,
 		githubClient:     githubClient,
+		kafkaProducer:    kafkaProducer,
 	}
 }
 
-func (gsiu *GetSubscriptionsInfoUsecase) Execute(ctx context.Context) ([]domain.Repository, error) {
+func (gsiu *GetSubscriptionsInfoUsecase) Execute(ctx context.Context) error {
 	// Get subscriptions from subscriber service
 	subscriptions, err := gsiu.subscriberClient.GetSubscriptions(ctx)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	// Get repository info for each subscription
-	results := make([]domain.Repository, 0, len(subscriptions))
 	for _, sub := range subscriptions {
+		// Get repository info for each subscription
 		repo, err := gsiu.githubClient.GetRepo(ctx, sub.Owner, sub.Repo)
 		if err != nil {
-			return nil, err
+			continue
 		}
-		results = append(results, repo)
+
+		// Send the finished result to Kafka
+		err = gsiu.kafkaProducer.SendRepoResult(ctx, repo)
+		if err != nil {
+			continue
+		}
 	}
 
-	return results, nil
+	return nil
 }

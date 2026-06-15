@@ -6,15 +6,17 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"time"
+
+	"github.com/segmentio/kafka-go"
 
 	"repo-stat/collector/config"
 	"repo-stat/collector/internal/adapter/github"
+	kafkaAdapter "repo-stat/collector/internal/adapter/kafka"
 	"repo-stat/collector/internal/adapter/subscriber"
-	"repo-stat/collector/internal/controller/grpc"
+	kafkaController "repo-stat/collector/internal/controller/kafka"
 	"repo-stat/collector/internal/usecase"
-	"repo-stat/platform/grpcserver"
 	"repo-stat/platform/logger"
-	collectorpb "repo-stat/proto/collector"
 )
 
 func run(ctx context.Context) error {
@@ -38,21 +40,46 @@ func run(ctx context.Context) error {
 		return err
 	}
 
+	// kafka producer client
+	producerClient := kafkaAdapter.NewProducerClient(cfg.Kafka, log)
+	defer producerClient.Close()
+
+	// kafka consumer client
+	tasksReader := kafka.NewReader(kafka.ReaderConfig{
+		Brokers: []string{cfg.Kafka.Address},
+		Topic:   cfg.Kafka.ConsumerTopic,
+		GroupID: cfg.Kafka.GroupID,
+	})
+	defer tasksReader.Close()
+
 	getRepoUsecase := usecase.NewRepoUsecase(githubClient)
-	getSubscriptionsInfoUsecase := usecase.NewGetSubscriptionsInfoUsecase(subscriberClient, githubClient)
-	grpcHandler := grpc.NewRepoHandler(log, getRepoUsecase, getSubscriptionsInfoUsecase)
+	getSubscriptionsInfoUsecase := usecase.NewGetSubscriptionsInfoUsecase(subscriberClient, githubClient, producerClient)
+	kafkaHandler := kafkaController.NewRepoWorker(tasksReader, getRepoUsecase, producerClient, log)
 
-	// server
-	srv, err := grpcserver.New(cfg.GRPC.Address)
-	if err != nil {
-		return fmt.Errorf("create grpc server: %w", err)
-	}
+	go kafkaHandler.Start(ctx)
 
-	collectorpb.RegisterRepoServiceServer(srv.GRPC(), grpcHandler)
+	go func() {
+		ticker := time.NewTicker(15 * time.Second)
+		defer ticker.Stop()
 
-	if err := srv.Run(ctx); err != nil {
-		return fmt.Errorf("run grpc server: %w", err)
-	}
+		log.Info("background subscription updater ticker started (15s)")
+
+		for {
+			select {
+			case <-ctx.Done():
+				log.Info("background subscription updater ticker stopped")
+				return
+			case <-ticker.C:
+				log.Debug("ticker triggered: updating subscriptions...")
+				if err := getSubscriptionsInfoUsecase.Execute(ctx); err != nil {
+					log.Error("failed to update subscriptions in background", "error", err)
+				}
+			}
+		}
+	}()
+
+	<-ctx.Done()
+	log.Info("stopping collector server gracefully...")
 
 	return nil
 }
