@@ -7,16 +7,22 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"repo-stat/platform/grpcserver"
 	"repo-stat/platform/logger"
 	"repo-stat/processor/config"
-	"repo-stat/processor/internal/adapter/collector"
+	"repo-stat/processor/internal/adapter/kafka"
+	"repo-stat/processor/internal/adapter/postgres"
 	grpccontroller "repo-stat/processor/internal/controller/grpc"
 	"repo-stat/processor/internal/usecase"
 	processorpb "repo-stat/proto/processor"
 )
 
 func run(ctx context.Context) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	// config
 	var configPath string
 	flag.StringVar(&configPath, "config", "config.yaml", "server configuration file")
@@ -29,17 +35,30 @@ func run(ctx context.Context) error {
 	log.Info("starting processor server...")
 	log.Debug("debug messages are enabled")
 
-	// collector client
-	collectorClient, err := collector.NewClient(cfg.Services.Collector, log)
+	// repo database
+	pool, err := pgxpool.New(ctx, cfg.Database.URL())
 	if err != nil {
-		log.Error("cannot init collector adapter", "error", err)
-		return err
+		return fmt.Errorf("failed to connect to database: %w", err)
 	}
+	defer pool.Close()
+
+	// postgresql client
+	dbClient := postgres.NewDBRepository(pool)
+
+	// kafka producer client
+	producerClient := kafka.NewProducerClient(cfg.Kafka, log)
+	defer producerClient.Close()
+
+	// kafka consumer client
+	consumerClient := kafka.NewConsumerClient(cfg.Kafka, dbClient, log)
+	defer consumerClient.Close()
+
+	go consumerClient.StartConsumer(ctx)
 
 	// handlers
 	pingUseCase := usecase.NewPing()
-	getRepoUseCase := usecase.NewGetRepo(collectorClient)
-	getSubscriptionsInfoUseCase := usecase.NewGetSubscriptionsInfo(collectorClient)
+	getRepoUseCase := usecase.NewGetRepo(producerClient, dbClient, log)
+	getSubscriptionsInfoUseCase := usecase.NewGetSubscriptionsInfo(dbClient)
 	processorServer := grpccontroller.NewServer(log, pingUseCase, getRepoUseCase, getSubscriptionsInfoUseCase)
 
 	// server
@@ -54,6 +73,7 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("run grpc server: %w", err)
 	}
 
+	cancel()
 	return nil
 }
 
