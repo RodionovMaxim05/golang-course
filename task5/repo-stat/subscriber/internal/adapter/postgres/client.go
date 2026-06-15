@@ -39,10 +39,11 @@ func (r *SubscriptionRepository) Create(ctx context.Context, sub *domain.Subscri
 
 func (r *SubscriptionRepository) Delete(ctx context.Context, owner, repo string) error {
 	err := r.queries.DeleteSubscription(ctx, DeleteSubscriptionParams{Owner: owner, Repo: repo})
-	if errors.Is(err, pgx.ErrNoRows) {
-		return domain.ErrNotFound
-	}
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.ErrNotFound
+		}
+
 		return fmt.Errorf("delete subscription: %w", err)
 	}
 	return nil

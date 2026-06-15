@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     owner VARCHAR(255) NOT NULL,
     repo VARCHAR(255) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(owner, repo)
+    CONSTRAINT uq_subscriptions_owner_repo UNIQUE (owner, repo)
 );
 
-CREATE INDEX idx_subscriptions_owner_repo ON subscriptions (owner, repo);
+CREATE INDEX idx_subscriptions_created_at_desc ON subscriptions (created_at DESC);
