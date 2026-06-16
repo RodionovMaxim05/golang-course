@@ -118,10 +118,10 @@ func run(ctx context.Context) error {
 func main() {
 	ctx := context.Background()
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
-	defer cancel()
 
 	if err := run(ctx); err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, err)
+		cancel()
 		os.Exit(1)
 	}
 }
