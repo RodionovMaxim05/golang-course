@@ -12,7 +12,7 @@ type App struct {
 }
 
 type Services struct {
-	Collector string `yaml:"collector" env:"COLLECTOR_ADDRESS" env-default:"localhost:8082"`
+	Subscriber string `yaml:"subscriber" env:"SUBSCRIBER_ADDRESS" env-default:"localhost:8081"`
 }
 
 type Kafka struct {

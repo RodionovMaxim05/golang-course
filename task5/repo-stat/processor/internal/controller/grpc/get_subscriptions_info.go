@@ -18,6 +18,10 @@ func (s *Server) GetSubscriptionsInfo(ctx context.Context, req *processorpb.GetS
 
 	repositories := make([]*processorpb.GetRepoResponse, 0, len(resp))
 	for _, repo := range resp {
+		if repo.Status != "SUCCESS" {
+			continue
+		}
+
 		repositories = append(repositories, &processorpb.GetRepoResponse{
 			FullName:        repo.FullName,
 			Description:     repo.Description,

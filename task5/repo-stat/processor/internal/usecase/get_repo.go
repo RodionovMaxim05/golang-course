@@ -34,9 +34,21 @@ func (gr *GetRepo) Execute(ctx context.Context, owner, repo string) (*domain.Rep
 		gr.log.Debug("fetching repository from database", "owner", owner, "repo", repo)
 		return repoInfo, nil
 	}
+
 	if errors.Is(err, domain.ErrNotFound) {
-		err = gr.repoGetter.SendRepoRequest(ctx, owner, repo)
+		pendingRepo := &domain.Repository{
+			FullName: fullName,
+			Status:   "PENDING",
+		}
+		if dbErr := gr.dataStorage.UpdateRepoStatus(ctx, pendingRepo); dbErr != nil {
+			gr.log.Error("failed to save PENDING status to DB", "repo", fullName, "error", dbErr)
+		} else {
+			gr.log.Debug("successfully saved PENDING status to DB", "repo", fullName)
+		}
+
+		err := gr.repoGetter.SendRepoRequest(ctx, owner, repo)
 		if err != nil {
+			gr.log.Error("failed to send repo request", "repo", fullName, "error", err)
 			return nil, fmt.Errorf("send repo request: %w", err)
 		}
 		gr.log.Debug("send repo info request", "owner", owner, "repo", repo)
