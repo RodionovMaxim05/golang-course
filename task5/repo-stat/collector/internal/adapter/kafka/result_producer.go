@@ -10,7 +10,7 @@ import (
 
 	"repo-stat/collector/config"
 	"repo-stat/collector/internal/domain"
-	collectorpb "repo-stat/proto/processor"
+	commonpb "repo-stat/proto/common"
 )
 
 type ResultProducerAdapter struct {
@@ -31,18 +31,18 @@ func NewResultProducerAdapter(cfg config.Kafka, log *slog.Logger) *ResultProduce
 }
 
 func (pc *ResultProducerAdapter) SendRepoResult(ctx context.Context, repo *domain.Repository, workerErr error, fullname string) error {
-	event := &collectorpb.GetRepoResultEvent{FullName: fullname}
+	event := &commonpb.GetRepoResultEvent{FullName: fullname}
 
 	if workerErr != nil {
-		event.Result = &collectorpb.GetRepoResultEvent_Error{
-			Error: &collectorpb.ErrorResponse{
+		event.Result = &commonpb.GetRepoResultEvent_Error{
+			Error: &commonpb.ErrorResponse{
 				Code:    mapDomainErrorToCode(workerErr),
 				Message: workerErr.Error(),
 			},
 		}
 	} else {
-		event.Result = &collectorpb.GetRepoResultEvent_Success{
-			Success: &collectorpb.GetRepoResponse{
+		event.Result = &commonpb.GetRepoResultEvent_Success{
+			Success: &commonpb.CollectRepoSuccess{
 				Description:     repo.Description,
 				StargazersCount: int32(repo.StargazersCount),
 				ForksCount:      int32(repo.ForksCount),

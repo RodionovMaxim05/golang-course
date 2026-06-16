@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"repo-stat/collector/internal/domain"
-	collectorpb "repo-stat/proto/processor"
+	collectorpb "repo-stat/proto/collector"
 )
 
 type GetRepoUsecase interface {
