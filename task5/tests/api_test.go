@@ -85,6 +85,12 @@ func TestPing(t *testing.T) {
 func TestRepositoryInfo(t *testing.T) {
 	waitForAPI(t)
 
+	// First initializing request
+	initResp, err := client.Get(address + "/api/repositories/info?url=https://github.com/golang/go")
+	require.NoError(t, err, "cannot request repository info initialization")
+	initResp.Body.Close()
+	time.Sleep(5 * time.Second)
+
 	resp, err := client.Get(address + "/api/repositories/info?url=https://github.com/golang/go")
 	require.NoError(t, err, "cannot request repository info")
 	defer resp.Body.Close()
@@ -164,6 +170,12 @@ func TestRepositoryInfoHelpfulFailureMessage(t *testing.T) {
 func TestRepositoryInfoCreatedAtFormatPresent(t *testing.T) {
 	waitForAPI(t)
 
+	// First initializing request
+	initResp, err := client.Get(address + "/api/repositories/info?url=https://github.com/golang/go")
+	require.NoError(t, err, "cannot request repository info initialization")
+	initResp.Body.Close()
+	time.Sleep(5 * time.Second)
+
 	resp, err := client.Get(address + "/api/repositories/info?url=https://github.com/golang/go")
 	require.NoError(t, err)
 	defer resp.Body.Close()
@@ -184,6 +196,14 @@ func TestRepositoryInfoEndpointStable(t *testing.T) {
 		address + "/api/repositories/info?url=https://github.com/golang/go",
 		address + "/api/repositories/info?url=https://github.com/kubernetes/kubernetes",
 	}
+
+	// First initializing requests
+	for _, u := range urls {
+		initResp, err := client.Get(u)
+		require.NoError(t, err, "cannot request repository info initialization")
+		initResp.Body.Close()
+	}
+	time.Sleep(5 * time.Second)
 
 	for _, u := range urls {
 		t.Run(fmt.Sprintf("request_%s", u), func(t *testing.T) {
