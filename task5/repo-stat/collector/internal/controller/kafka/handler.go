@@ -1,4 +1,4 @@
-package kafkaController
+package kafkacontroller
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"repo-stat/collector/internal/domain"
-	collectorpb "repo-stat/proto/collector"
+	collectorpb "repo-stat/proto/processor"
 )
 
 type GetRepoUsecase interface {
@@ -17,7 +17,7 @@ type GetRepoUsecase interface {
 }
 
 type ResultProducer interface {
-	SendRepoResult(ctx context.Context, repo domain.Repository) error
+	SendRepoResult(ctx context.Context, repo *domain.Repository, workErr error, fullname string) error
 }
 
 type RepoWorker struct {
@@ -28,10 +28,10 @@ type RepoWorker struct {
 }
 
 func NewRepoWorker(
+	log *slog.Logger,
 	reader *kafka.Reader,
 	repoUsecase GetRepoUsecase,
 	producer ResultProducer,
-	log *slog.Logger,
 ) *RepoWorker {
 	return &RepoWorker{
 		log:         log,
@@ -60,11 +60,11 @@ func (rw *RepoWorker) Start(ctx context.Context) {
 
 		var req collectorpb.GetRepoRequest
 		if err := proto.Unmarshal(message.Value, &req); err != nil {
-			rw.log.Error("error deserializing incoming task", "err", err)
+			rw.log.Error("error deserializing incoming task", "error", err)
 			continue
 		}
 
-		rw.log.Debug("a task for collecting data from Kafka has been received", "owner", req.Owner, "repo", req.Repo)
+		rw.log.Debug("task received", "owner", req.Owner, "repo", req.Repo)
 
 		repo, err := rw.repoUsecase.Execute(ctx, req.Owner, req.Repo)
 		if err != nil {
@@ -73,18 +73,28 @@ func (rw *RepoWorker) Start(ctx context.Context) {
 				"repo", req.Repo,
 				"err", err,
 			)
+
+			rw.sendResultToKafka(ctx, nil, err, req.Owner+"/"+req.Repo)
 			continue
 		}
 
-		err = rw.producer.SendRepoResult(ctx, repo)
-		if err != nil {
-			rw.log.Error("failed to send collection result to Kafka",
-				"repo", repo.FullName,
-				"err", err,
-			)
-			continue
-		}
+		rw.sendResultToKafka(ctx, &repo, nil, repo.FullName)
+	}
+}
 
-		rw.log.Info("the result has been successfully collected and sent to Kafka", "repo", repo.FullName)
+func (rw *RepoWorker) sendResultToKafka(ctx context.Context, repo *domain.Repository, workErr error, repoIdentifier string) {
+	err := rw.producer.SendRepoResult(ctx, repo, workErr, repoIdentifier)
+	if err != nil {
+		rw.log.Error("failed to send result or error to Kafka",
+			"repo", repoIdentifier,
+			"error", err,
+		)
+		return
+	}
+
+	if workErr != nil {
+		rw.log.Info("error status successfully sent to Kafka", "repo", repoIdentifier)
+	} else {
+		rw.log.Info("result successfully processed and sent to Kafka", "repo", repoIdentifier)
 	}
 }
