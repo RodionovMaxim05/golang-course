@@ -5,5 +5,8 @@ CREATE TABLE IF NOT EXISTS repositories (
     stargazers_count INTEGER NOT NULL DEFAULT 0,
     forks_count INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    repo_status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+    error_code VARCHAR(100),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uq_repositories_full_name UNIQUE (full_name)
 );

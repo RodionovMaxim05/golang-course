@@ -15,4 +15,7 @@ type Repository struct {
 	StargazersCount int32
 	ForksCount      int32
 	CreatedAt       pgtype.Timestamptz
+	RepoStatus      string
+	ErrorCode       pgtype.Text
+	UpdatedAt       pgtype.Timestamptz
 }

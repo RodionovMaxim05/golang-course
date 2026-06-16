@@ -23,7 +23,7 @@ func NewProducerClient(cfg config.Kafka, log *slog.Logger) *ProducerClient {
 			Addr:         kafka.TCP(cfg.Address),
 			Topic:        cfg.ProducerTopic,
 			Balancer:     &kafka.LeastBytes{},
-			RequiredAcks: kafka.RequireAll,
+			RequiredAcks: kafka.RequireOne,
 		},
 	}
 }
@@ -46,8 +46,9 @@ func (pc *ProducerClient) SendRepoRequest(ctx context.Context, owner, repo strin
 	if err != nil {
 		pc.log.Error("failed to write messages in Kafka", "error", err)
 		return err
-
 	}
+
+	pc.log.Debug("message successfully written to Kafka")
 
 	return nil
 }

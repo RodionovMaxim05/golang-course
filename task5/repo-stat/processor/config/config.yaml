@@ -15,4 +15,4 @@ logger:
   log_level: "DEBUG"
 
 services:
-  collector: "localhost:8082"
+  subscriber: "localhost:8081"

@@ -10,8 +10,10 @@ import (
 
 type Querier interface {
 	GetRepo(ctx context.Context, fullName string) (Repository, error)
+	GetReposByNames(ctx context.Context, dollar_1 []string) ([]Repository, error)
 	InsertRepo(ctx context.Context, arg InsertRepoParams) error
 	ListAllRepos(ctx context.Context) ([]Repository, error)
+	UpdateRepoStatus(ctx context.Context, arg UpdateRepoStatusParams) error
 }
 
 var _ Querier = (*Queries)(nil)

@@ -14,6 +14,7 @@ import (
 	"repo-stat/processor/config"
 	"repo-stat/processor/internal/adapter/kafka"
 	"repo-stat/processor/internal/adapter/postgres"
+	"repo-stat/processor/internal/adapter/subscriber"
 	grpccontroller "repo-stat/processor/internal/controller/grpc"
 	"repo-stat/processor/internal/usecase"
 	processorpb "repo-stat/proto/processor"
@@ -34,6 +35,18 @@ func run(ctx context.Context) error {
 	log := logger.MustMakeLogger(cfg.Logger.LogLevel)
 	log.Info("starting processor server...")
 	log.Debug("debug messages are enabled")
+
+	// subscriber client
+	subscriberClient, err := subscriber.NewClient(cfg.Services.Subscriber, log)
+	if err != nil {
+		log.Error("cannot init subscriber adapter", "error", err)
+		return err
+	}
+	defer func() {
+		if err := subscriberClient.Close(); err != nil {
+			log.Error("failed to close subscriber client", "error", err)
+		}
+	}()
 
 	// repo database
 	pool, err := pgxpool.New(ctx, cfg.Database.URL())
@@ -66,7 +79,7 @@ func run(ctx context.Context) error {
 	// handlers
 	pingUseCase := usecase.NewPing()
 	getRepoUseCase := usecase.NewGetRepo(producerClient, dbClient, log)
-	getSubscriptionsInfoUseCase := usecase.NewGetSubscriptionsInfo(dbClient)
+	getSubscriptionsInfoUseCase := usecase.NewGetSubscriptionsInfo(subscriberClient, dbClient, log)
 	processorServer := grpccontroller.NewServer(log, pingUseCase, getRepoUseCase, getSubscriptionsInfoUseCase)
 
 	// server

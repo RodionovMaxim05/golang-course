@@ -12,7 +12,7 @@ import (
 )
 
 const getRepo = `-- name: GetRepo :one
-SELECT id, full_name, description, stargazers_count, forks_count, created_at
+SELECT id, full_name, description, stargazers_count, forks_count, created_at, repo_status, error_code, updated_at
 FROM repositories
 WHERE full_name = $1
 LIMIT 1
@@ -28,8 +28,47 @@ func (q *Queries) GetRepo(ctx context.Context, fullName string) (Repository, err
 		&i.StargazersCount,
 		&i.ForksCount,
 		&i.CreatedAt,
+		&i.RepoStatus,
+		&i.ErrorCode,
+		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const getReposByNames = `-- name: GetReposByNames :many
+SELECT id, full_name, description, stargazers_count, forks_count, created_at, repo_status, error_code, updated_at
+FROM repositories
+WHERE full_name = ANY($1::text [])
+`
+
+func (q *Queries) GetReposByNames(ctx context.Context, dollar_1 []string) ([]Repository, error) {
+	rows, err := q.db.Query(ctx, getReposByNames, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Repository
+	for rows.Next() {
+		var i Repository
+		if err := rows.Scan(
+			&i.ID,
+			&i.FullName,
+			&i.Description,
+			&i.StargazersCount,
+			&i.ForksCount,
+			&i.CreatedAt,
+			&i.RepoStatus,
+			&i.ErrorCode,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const insertRepo = `-- name: InsertRepo :exec
@@ -38,14 +77,20 @@ INSERT INTO repositories (
         description,
         stargazers_count,
         forks_count,
-        created_at
+        created_at,
+        repo_status,
+        error_code,
+        updated_at
     )
-VALUES ($1, $2, $3, $4, $5) ON CONFLICT (full_name) DO
+VALUES ($1, $2, $3, $4, $5, $6, $7, NOW()) ON CONFLICT (full_name) DO
 UPDATE
 SET description = EXCLUDED.description,
     stargazers_count = EXCLUDED.stargazers_count,
     forks_count = EXCLUDED.forks_count,
-    created_at = EXCLUDED.created_at
+    created_at = EXCLUDED.created_at,
+    repo_status = EXCLUDED.repo_status,
+    error_code = EXCLUDED.error_code,
+    updated_at = NOW()
 `
 
 type InsertRepoParams struct {
@@ -54,6 +99,8 @@ type InsertRepoParams struct {
 	StargazersCount int32
 	ForksCount      int32
 	CreatedAt       pgtype.Timestamptz
+	RepoStatus      string
+	ErrorCode       pgtype.Text
 }
 
 func (q *Queries) InsertRepo(ctx context.Context, arg InsertRepoParams) error {
@@ -63,12 +110,14 @@ func (q *Queries) InsertRepo(ctx context.Context, arg InsertRepoParams) error {
 		arg.StargazersCount,
 		arg.ForksCount,
 		arg.CreatedAt,
+		arg.RepoStatus,
+		arg.ErrorCode,
 	)
 	return err
 }
 
 const listAllRepos = `-- name: ListAllRepos :many
-SELECT id, full_name, description, stargazers_count, forks_count, created_at
+SELECT id, full_name, description, stargazers_count, forks_count, created_at, repo_status, error_code, updated_at
 FROM repositories
 ORDER BY full_name
 `
@@ -89,6 +138,9 @@ func (q *Queries) ListAllRepos(ctx context.Context) ([]Repository, error) {
 			&i.StargazersCount,
 			&i.ForksCount,
 			&i.CreatedAt,
+			&i.RepoStatus,
+			&i.ErrorCode,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -98,4 +150,24 @@ func (q *Queries) ListAllRepos(ctx context.Context) ([]Repository, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateRepoStatus = `-- name: UpdateRepoStatus :exec
+INSERT INTO repositories (full_name, repo_status, error_code, updated_at)
+VALUES ($1, $2, $3, NOW()) ON CONFLICT (full_name) DO
+UPDATE
+SET repo_status = EXCLUDED.repo_status,
+    error_code = EXCLUDED.error_code,
+    updated_at = NOW()
+`
+
+type UpdateRepoStatusParams struct {
+	FullName   string
+	RepoStatus string
+	ErrorCode  pgtype.Text
+}
+
+func (q *Queries) UpdateRepoStatus(ctx context.Context, arg UpdateRepoStatusParams) error {
+	_, err := q.db.Exec(ctx, updateRepoStatus, arg.FullName, arg.RepoStatus, arg.ErrorCode)
+	return err
 }
