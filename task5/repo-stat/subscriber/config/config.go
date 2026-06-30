@@ -14,12 +14,12 @@ type App struct {
 }
 
 type Database struct {
-	Host     string `yaml:"host" env:"POSTGRES_HOST" env-default:"localhost"`
-	Port     int    `yaml:"port" env:"SUB_POSTGRES_PORT" env-default:"5432"`
 	User     string `yaml:"user" env:"SUB_POSTGRES_USER" env-default:"sub_user"`
 	Password string `yaml:"password" env:"SUB_POSTGRES_PASSWORD" env-default:"sub_password"`
+	Host     string `yaml:"host" env:"SUB_POSTGRES_HOST" env-default:"localhost"`
+	Port     int    `yaml:"port" env:"SUB_POSTGRES_PORT" env-default:"5432"`
 	Name     string `yaml:"name" env:"SUB_POSTGRES_DB" env-default:"subscriber_db"`
-	SSLMode  string `yaml:"sslmode" env:"POSTGRES_SSLMODE" env-default:"disable"`
+	SSLMode  string `yaml:"sslmode" env:"SUB_POSTGRES_SSLMODE" env-default:"disable"`
 }
 
 func (d Database) URL() string {

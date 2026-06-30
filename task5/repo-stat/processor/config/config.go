@@ -23,12 +23,12 @@ type Kafka struct {
 }
 
 type Database struct {
-	Host     string `yaml:"host" env:"POSTGRES_HOST" env-default:"localhost"`
-	Port     int    `yaml:"port" env:"PROC_POSTGRES_PORT" env-default:"5432"`
 	User     string `yaml:"user" env:"PROC_POSTGRES_USER" env-default:"proc_user"`
 	Password string `yaml:"password" env:"PROC_POSTGRES_PASSWORD" env-default:"proc_password"`
+	Host     string `yaml:"host" env:"PROC_POSTGRES_HOST" env-default:"localhost"`
+	Port     int    `yaml:"port" env:"PROC_POSTGRES_PORT" env-default:"5432"`
 	Name     string `yaml:"name" env:"PROC_POSTGRES_DB" env-default:"processor_db"`
-	SSLMode  string `yaml:"sslmode" env:"POSTGRES_SSLMODE" env-default:"disable"`
+	SSLMode  string `yaml:"sslmode" env:"PROC_POSTGRES_SSLMODE" env-default:"disable"`
 }
 
 func (d Database) URL() string {
