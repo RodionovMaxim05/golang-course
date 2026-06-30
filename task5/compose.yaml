@@ -41,7 +41,7 @@ services:
       - "${POSTGRES_PORT:-5431}:5432"
     environment:
       - POSTGRES_USER=${SUB_POSTGRES_USER:-sub_user}
-      - POSTGRES_PASSWORD=${SUB_POSTGRES_PASSWORD:-sub_secure_password}
+      - POSTGRES_PASSWORD=${SUB_POSTGRES_PASSWORD:-sub_password}
       - POSTGRES_DB=${SUB_POSTGRES_DB:-subscriber_db}
     volumes:
       - postgres_sub_data:/var/lib/postgresql/data
@@ -60,7 +60,7 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     environment:
       - POSTGRES_USER=${PROC_POSTGRES_USER:-proc_user}
-      - POSTGRES_PASSWORD=${PROC_POSTGRES_PASSWORD:-proc_secure_password}
+      - POSTGRES_PASSWORD=${PROC_POSTGRES_PASSWORD:-proc_password}
       - POSTGRES_DB=${PROC_POSTGRES_DB:-processor_db}
     volumes:
       - postgres_proc_data:/var/lib/postgresql/data
@@ -148,7 +148,7 @@ services:
     environment:
       - LISTEN_ADDRESS=:8081
       - POSTGRES_USER=${SUB_POSTGRES_USER:-sub_user}
-      - POSTGRES_PASSWORD=${SUB_POSTGRES_PASSWORD:-sub_secure_password}
+      - POSTGRES_PASSWORD=${SUB_POSTGRES_PASSWORD:-sub_password}
       - POSTGRES_DB=${SUB_POSTGRES_DB:-subscriber_db}
       - POSTGRES_HOST=postgres_sub
       - POSTGRES_PORT=5432
@@ -172,8 +172,8 @@ services:
       - LISTEN_ADDRESS=:8083
       - SUBSCRIBER_ADDRESS=subscriber:8081
       - POSTGRES_USER=${PROC_POSTGRES_USER:-proc_user}
-      - POSTGRES_PASSWORD=${PROC_POSTGRES_PASSWORD:-proc_secure_password}
-      - POSTGRES_DB=${PROC_POSTGRES_DB:-repo_stat}
+      - POSTGRES_PASSWORD=${PROC_POSTGRES_PASSWORD:-proc_password}
+      - POSTGRES_DB=${PROC_POSTGRES_DB:-processor_db}
       - POSTGRES_HOST=postgres_proc
       - POSTGRES_PORT=5432
     depends_on:
