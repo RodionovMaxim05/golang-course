@@ -1,0 +1,18 @@
+app:
+  app_name: "repo-watcher-processor"
+
+grpc:
+  address: "localhost:8083"
+  timeout: "5s"
+
+kafka:
+  address: "kafka:9092"
+  producer_topic: "repo-requests"
+  consumer_topic: "repo-results"
+  group_id: "processor-group"
+
+logger:
+  log_level: "DEBUG"
+
+services:
+  subscriber: "localhost:8081"
