@@ -2,6 +2,7 @@ package domain
 
 import "errors"
 
+// Package-level sentinel errors returned by use cases and storage adapters.
 var (
 	ErrNotFound        = errors.New("not found")
 	ErrAccepted        = errors.New("request accepted")

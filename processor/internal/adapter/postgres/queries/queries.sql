@@ -37,8 +37,3 @@ LIMIT 1;
 SELECT *
 FROM repositories
 WHERE full_name = ANY($1::text []);
-
--- name: ListAllRepos :many
-SELECT *
-FROM repositories
-ORDER BY full_name;

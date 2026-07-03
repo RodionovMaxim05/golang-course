@@ -94,7 +94,6 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("run grpc server: %w", err)
 	}
 
-	cancel()
 	return nil
 }
 

@@ -4,15 +4,16 @@ import (
 	"errors"
 
 	"repo-watcher/collector/internal/domain"
+	commonpb "repo-watcher/proto/gen/go/common/v1"
 )
 
-func mapDomainErrorToCode(err error) string {
+func mapDomainErrorToCode(err error) commonpb.ErrorCode {
 	switch {
 	case errors.Is(err, domain.ErrNotFound):
-		return "REPOSITORY_NOT_FOUND"
+		return commonpb.ErrorCode_ERROR_CODE_REPOSITORY_NOT_FOUND
 	case errors.Is(err, domain.ErrRateLimited):
-		return "GITHUB_RATE_LIMIT_EXCEEDED"
+		return commonpb.ErrorCode_ERROR_CODE_GITHUB_RATE_LIMIT_EXCEEDED
 	default:
-		return "INTERNAL_COLLECTOR_ERROR"
+		return commonpb.ErrorCode_ERROR_CODE_INTERNAL_COLLECTOR_ERROR
 	}
 }

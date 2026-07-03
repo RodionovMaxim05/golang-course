@@ -30,6 +30,9 @@ func NewClient(addr string, log *slog.Logger) (*Client, error) {
 	}, nil
 }
 
+// GetActiveSubscriptions retrieves the full list of currently active
+// subscriptions from the Subscriber service, formatted as "owner/repo"
+// strings.
 func (c *Client) GetActiveSubscriptions(ctx context.Context) ([]string, error) {
 	resp, err := c.client.GetSubscriptions(ctx, &subscribepb.GetSubsRequest{})
 	if err != nil {
