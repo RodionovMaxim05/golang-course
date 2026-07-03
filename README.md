@@ -2,87 +2,114 @@
 
 ## Description
 
-A microservices-based application for fetching and managing GitHub repository statistics with subscription functionality. Users can subscribe to repositories and receive aggregated information about their subscribed repositories. The project follows Clean Architecture principles and uses gRPC for inter-service communication.
+A microservices-based application for fetching and managing GitHub repository statistics with subscription functionality. Users can subscribe to repositories and receive aggregated information about their subscribed repositories. The project follows Clean Architecture principles, uses gRPC for synchronous inter-service communication, and Kafka for asynchronous event-driven interactions.
 
 ## Architecture
 
-The system consists of 4 microservices:
+The system utilizes a distributed microservices pattern:
 
-- **API Gateway** - REST API server that accepts external HTTP requests and coordinates communication with other services
-- **Processor** - Intermediate gRPC service that acts as a bridge between API Gateway and Collector
-- **Collector** - gRPC service that handles GitHub API interactions and repository data fetching
-- **Subscriber** - gRPC service that manages repository subscriptions in PostgreSQL database
+- **API Gateway** — REST API server that handles incoming HTTP traffic from the сlient. It uses **Redis** as a rate limiter to protect downstream services and as an edge cache to instantly serve frequent lookup results. It routes requests downstream using **gRPC**.
+- **Processor** — The central orchestration engine of the system. It receives **gRPC** requests and maintains its own **Processor DB** to store cached repository metrics and workflow states. It acts as a producer for asynchronous background data operations via **Kafka** and fetches active user subscription lists through a **gRPC** link to the Subscriber.
+- **Collector** — A stateless worker service dedicated to data integration and scraping. It processes tasks via the **Kafka Broker** and fetches repository details from the external **GitHub Cloud**. Additionally, it periodically independently queries the Subscriber via **gRPC** to fetch all active subscriptions and publishes update tasks back to Kafka for each one, ensuring that repository states in the Processor are regularly refreshed without direct user interaction.
+- **Subscriber** — A dedicated domain service managing user repository subscriptions. It handles subscription lifecycle actions via incoming **gRPC** channels, independently communicates with the **GitHub Cloud** to validate repository existence when a new subscription is being added, and manages an isolated **Subscriber DB** to encapsulate subscription watchlists.
+
+![UML Deploymnt Diagram](figures/deployment_diagram.svg)
 
 ## Requirements
 
-- Go 1.25+
-- Docker & Docker Compose
-- PostgreSQL (for subscription storage)
-- Make
+### For Deployment & Quick Start
+
+If you run the application via Docker Compose, you only need:
+
+- **Docker & Docker Compose**
+- **Make** (optional, for convenience commands)
+
+### For Local Development
+
+If you prefer to build and run the binary natively on your host machine:
+
+- **Go 1.25+**
+- **Apache Kafka**
+- **PostgreSQL (separate instances for Subscriber and Processor)**
 
 ## Quick Start
 
 ### Run with Docker Compose
 
 ```bash
-docker compose up --build
+make up
 ```
 
-Stop:
+To stop the services:
 
 ```bash
-docker compose stop
-
-# or to stop and remove containers:
-
-docker compose down
+make down
 ```
 
-Services will start on:
+To stop services and completely wipe database volumes:
 
-- API Gateway: `http://localhost:28080`
-- Processor: `grpc://localhost:8083`
-- Collector: `grpc://localhost:8082`
-- Subscriber: `grpc://localhost:8081`
-- PostgreSQL: `localhost:5432`
+```bash
+make down-volumes
+```
 
-### Environment Variables
+## Configuration
 
-The application uses the following environment variables (with defaults):
+The application splits its configuration into environmental secrets (`.env`) and operational parameters (`<service>/config/config.yaml`).
 
-- `POSTGRES_USER=postgres`
-- `POSTGRES_PASSWORD=password`
-- `POSTGRES_DB=repo_stat`
-- `POSTGRES_HOST=postgres`
-- `POSTGRES_PORT=5432`
-- `POSTGRES_SSLMODE=disable`
+Before running the application, you **must copy the example file and adjust them** for your environment.
+
+### 1. Infrastructure & Secrets (`.env`)
+
+Copy the template file to create your local environment file:
+
+```bash
+cp .env.example .env
+```
+
+Open .env and fill in your database credentials and infrastructure ports (to run via Docker, the pre-configured default values for Kafka and isolated PostgreSQL databases will work out of the box).
+
+### 2. Services Settings (`<service>config/config.yaml`)
+
+Edit each `<service>/config/config.yaml` file if you need to change the default settings for the corresponding service.
 
 ## Development
-
-### Database
-
-The Subscriber service uses PostgreSQL for storing repository subscriptions. Database migrations are automatically applied when the services start.
 
 ### Available Make Commands
 
 ```bash
-make tools       # Install development tools
-make protobuf    # Generate protobuf code
-make swagger     # Generate swagger docs
-make lint        # Run linter
-make test        # Run tests in Docker
-make build       # Build all services
-```
+# Infrastructure
+make up                 # Up containers in background with docker compose
+make down               # Stop and remove active containers
+make down-volumes       # Stop containers and completely wipe all docker volumes
 
-### Testing
+# Code Generation
+make protobuf           # Compile all .proto contract files using module resolution
+make swagger            # Generate Swagger documentation for API Gateway
 
-Run tests:
+# Linting & Formatting
+make lint               # Run all active linters (protolint, gofmtcheck, golint)
+make fix                # Auto-fix proto/go formatting and common lint issues
 
-```bash
-(cd ../ & make test)        # Full test suite in Docker
+# Testing
+make unit-test          # Run unit tests with race detector and generate HTML coverage
+make integration-test   # Up isolated environment, run integration tests, and down env
+
+# Tooling
+make tools              # Install all necessary local development binaries and plugins
 ```
 
 ## API Endpoints
+
+### Summary Table
+
+| Method & Path | Description |
+| :--- | :--- |
+| `GET /api/ping` | **Health Check:** Returns the operational status of all downstream services. |
+| `GET /api/repositories/info` | **Repository Information:** Fetches details for a specific repository directly from GitHub. |
+| `GET /api/subscriptions` | **List Subscriptions:** Retrieves all currently monitored repositories with their creation timestamps. |
+| `POST /api/subscriptions` | **Subscribe to Repository:** Adds a new GitHub repository to the monitoring system. |
+| `DELETE /api/subscriptions/{owner}/{repo}` | **Unsubscribe from Repository:** Removes a specific repository from monitored subscriptions. |
+| `GET /api/subscriptions/info` | **Get Subscribed Repositories Info:** Retrieves aggregated metrics and data for all subscribed repositories. |
 
 ### Health Check
 
@@ -90,7 +117,7 @@ Run tests:
 GET /api/ping
 ```
 
-Returns status of all services:
+Returns status of all services.
 
 ```json
 {
@@ -116,7 +143,7 @@ Returns `503 Service Unavailable` if any service is down.
 GET /api/repositories/info?url=<github_repo_url>
 ```
 
-Fetch repository information from GitHub:
+Fetch repository information from GitHub.
 
 **Example:**
 
@@ -144,7 +171,7 @@ curl "http://localhost:28080/api/repositories/info?url=https://github.com/golang
 GET /api/subscriptions
 ```
 
-Returns all subscribed repositories with creation timestamps:
+Returns all subscribed repositories with creation timestamps.
 
 **Example:**
 
@@ -175,7 +202,7 @@ curl "http://localhost:28080/api/subscriptions"
 POST /api/subscriptions?url=<github_repo_url>
 ```
 
-Subscribe to a GitHub repository for monitoring:
+Subscribe to a GitHub repository for monitoring.
 
 **Example:**
 
@@ -199,7 +226,7 @@ curl -X POST "http://localhost:28080/api/subscriptions?url=https://github.com/go
 DELETE /api/subscriptions/{owner}/{repo}
 ```
 
-Remove subscription for a specific repository:
+Remove subscription for a specific repository.
 
 **Example:**
 
@@ -213,7 +240,7 @@ curl -X DELETE "http://localhost:28080/api/subscriptions/golang/go"
 GET /api/subscriptions/info
 ```
 
-Retrieve aggregated information for all subscribed repositories:
+Retrieve aggregated information for all subscribed repositories.
 
 **Example:**
 
@@ -244,7 +271,7 @@ curl "http://localhost:28080/api/subscriptions/info"
 
 ### Swagger Documentation
 
-API documentation available at:
+Interactive API playground is available at:
 
 ```
 http://localhost:28080/swagger/index.html
