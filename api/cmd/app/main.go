@@ -12,9 +12,16 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/redis/go-redis/v9"
+
 	"repo-watcher/api/config"
 	_ "repo-watcher/api/docs"
+	"repo-watcher/api/internal/adapter/cache"
+	"repo-watcher/api/internal/adapter/processor"
+	"repo-watcher/api/internal/adapter/ratelimiter"
+	"repo-watcher/api/internal/adapter/subscriber"
 	"repo-watcher/api/internal/controller/http"
+	"repo-watcher/api/internal/usecase"
 	"repo-watcher/platform/httpserver"
 	"repo-watcher/platform/logger"
 )
@@ -32,12 +39,44 @@ func run(ctx context.Context) error {
 	log.Info("starting server...")
 	log.Debug("debug messages are enabled")
 
-	// handler
-	handler, err := http.NewHandler(ctx, log, cfg)
+	// adapters
+
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: cfg.Redis.Address,
+	})
+	redisCache := cache.NewCache(redisClient, log)
+	redisRateLimiter := ratelimiter.NewRedisRateLimiter(redisClient, cfg.RateLimit, log)
+
+	inMemoryRateLimiter := ratelimiter.NewInMemoryRateLimiter(cfg.RateLimit, log)
+
+	fallbackRateLimiter := ratelimiter.NewFallbackRateLimiter(redisRateLimiter, inMemoryRateLimiter, log)
+
+	subscriberClient, err := subscriber.NewClient(cfg.Services.Subscriber, log)
 	if err != nil {
-		log.Error("Error creating handler", "error", err)
+		log.Error("cannot init subscriber adapter", "error", err)
 		return err
 	}
+
+	processorClient, err := processor.NewClient(cfg.Services.Processor, redisCache, cfg.Cache.TTL, log)
+	if err != nil {
+		log.Error("cannot init processor adapter", "error", err)
+		return err
+	}
+
+	// usercases
+
+	pingUseCase := usecase.NewPing(subscriberClient, processorClient)
+	subscribeUseCase := usecase.NewSubscriber(subscriberClient)
+	unsubscribeUseCase := usecase.NewUnsubscriber(subscriberClient)
+	getSubscriptionsUseCase := usecase.NewGetSubscriptions(subscriberClient)
+	subscriptionsInfoUseCase := usecase.NewGetSubscriptionsInfo(processorClient)
+	getRepoUseCase := usecase.NewGetRepo(processorClient)
+
+	// handler
+	handler := http.NewHandler(
+		log, fallbackRateLimiter, pingUseCase, getRepoUseCase, subscribeUseCase, unsubscribeUseCase,
+		getSubscriptionsUseCase, subscriptionsInfoUseCase,
+	)
 
 	// server
 	srv := httpserver.New(cfg.HTTP, handler)

@@ -1,13 +1,9 @@
 package http
 
 import (
-	"encoding/json"
 	"log/slog"
 	"net/http"
-	"time"
 
-	"repo-watcher/api/internal/domain"
-	"repo-watcher/api/internal/dto"
 	"repo-watcher/api/internal/usecase"
 )
 
@@ -24,15 +20,15 @@ func NewGetRepoHandler(log *slog.Logger, getRepo *usecase.GetRepo) http.HandlerF
 		owner, repo, err := parseGitHubURL(r.URL.Query().Get("url"))
 		if err != nil {
 			log.Error("failed to parse github url", "error", err)
-			writeJSONError(w, http.StatusBadRequest, "failed to parse github url")
+			writeJSON(w, log, http.StatusBadRequest, map[string]string{"error": "failed to parse github url"})
 			return
 		}
 
 		repoInfo, err := getRepo.Execute(r.Context(), owner, repo)
 		if err != nil {
-			httpCode := DomainErrToHTTP(err)
 			log.Error("failed to get repo", "error", err)
-			writeJSONError(w, httpCode, err.Error())
+			httpCode := DomainErrToHTTP(err)
+			writeJSON(w, log, httpCode, map[string]string{"error": err.Error()})
 			return
 		}
 
@@ -40,20 +36,6 @@ func NewGetRepoHandler(log *slog.Logger, getRepo *usecase.GetRepo) http.HandlerF
 
 		response := mapRepoResponse(repoInfo)
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(response); err != nil {
-			log.Error("failed to write repo response", "error", err)
-		}
-	}
-}
-
-func mapRepoResponse(resp domain.Repository) dto.RepoInfoResponse {
-	return dto.RepoInfoResponse{
-		FullName:    resp.FullName,
-		Description: resp.Description,
-		Stars:       resp.Stargazers,
-		Forks:       resp.Forks,
-		CreatedAt:   resp.CreatedAt.Format(time.RFC3339),
+		writeJSON(w, log, http.StatusOK, response)
 	}
 }

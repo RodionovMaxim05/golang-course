@@ -32,6 +32,18 @@ services:
         condition: service_healthy
     command: bash -c "/opt/kafka/bin/kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic repo-requests --partitions 3 --replication-factor 1 && /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic repo-results --partitions 3 --replication-factor 1"
 
+  redis:
+      image: redis:latest
+      container_name: redis
+      restart: unless-stopped
+      ports:
+        - "${REDIS_PORT:-6379}:6379"
+      healthcheck:
+        test: ["CMD", "redis-cli", "ping"]
+        interval: 2s
+        timeout: 5s
+        retries: 5
+
   postgres_sub:
     image: postgres:17-alpine
     container_name: postgres_sub
@@ -48,7 +60,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 2s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   postgres_proc:
     image: postgres:17-alpine
@@ -66,7 +78,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 2s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   migrate_sub:
     image: migrate/migrate
@@ -111,11 +123,14 @@ services:
       - LISTEN_ADDRESS=:8080
       - SUBSCRIBER_ADDRESS=subscriber:8081
       - PROCESSOR_ADDRESS=processor:8083
+      - REDIS_ADDRESS=redis:6379
     depends_on:
       subscriber:
         condition: service_started
       processor:
         condition: service_started
+      redis:
+        condition: service_healthy
 
   subscriber:
     image: subscriber:latest
@@ -132,8 +147,8 @@ services:
       - LISTEN_ADDRESS=:8081
       - SUB_POSTGRES_USER=${SUB_POSTGRES_USER:-sub_user}
       - SUB_POSTGRES_PASSWORD=${SUB_POSTGRES_PASSWORD:-sub_password}
-      - SUB_POSTGRES_HOST=${SUB_POSTGRES_HOST:-postgres_sub}
-      - SUB_POSTGRES_PORT=${SUB_POSTGRES_PORT:-5432}
+      - SUB_POSTGRES_HOST=postgres_sub
+      - SUB_POSTGRES_PORT=5432
       - SUB_POSTGRES_DB=${SUB_POSTGRES_DB:-subscriber_db}
       - SUB_POSTGRES_SSLMODE=${SUB_POSTGRES_SSLMODE:-disable}
     depends_on:
@@ -156,8 +171,8 @@ services:
       - SUBSCRIBER_ADDRESS=subscriber:8081
       - PROC_POSTGRES_USER=${PROC_POSTGRES_USER:-proc_user}
       - PROC_POSTGRES_PASSWORD=${PROC_POSTGRES_PASSWORD:-proc_password}
-      - PROC_POSTGRES_HOST=${PROC_POSTGRES_HOST:-postgres_proc}
-      - PROC_POSTGRES_PORT=${PROC_POSTGRES_PORT:-5432}
+      - PROC_POSTGRES_HOST=postgres_proc
+      - PROC_POSTGRES_PORT=5432
       - PROC_POSTGRES_DB=${PROC_POSTGRES_DB:-processor_db}
       - PROC_POSTGRES_SSLMODE=${PROC_POSTGRES_SSLMODE:-disable}
     depends_on:

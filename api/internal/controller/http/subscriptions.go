@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"log/slog"
 	"net/http"
 
@@ -22,14 +21,14 @@ func NewSubscribeHandler(log *slog.Logger, subscribe *usecase.Subscribe) http.Ha
 	return func(w http.ResponseWriter, r *http.Request) {
 		url := r.URL.Query().Get("url")
 		if url == "" {
-			writeJSONError(w, http.StatusBadRequest, "url is required")
+			writeJSON(w, log, http.StatusBadRequest, map[string]string{"error": "url is required"})
 			return
 		}
 
 		owner, repo, err := parseGitHubURL(url)
 		if err != nil {
 			log.Error("failed to parse github url", "error", err)
-			writeJSONError(w, http.StatusBadRequest, "failed to parse github url")
+			writeJSON(w, log, http.StatusBadRequest, map[string]string{"error": "failed to parse github url"})
 			return
 		}
 
@@ -37,7 +36,7 @@ func NewSubscribeHandler(log *slog.Logger, subscribe *usecase.Subscribe) http.Ha
 		if err != nil {
 			httpCode := DomainErrToHTTP(err)
 			log.Error("failed to subscribe repository", "error", err)
-			writeJSONError(w, httpCode, err.Error())
+			writeJSON(w, log, httpCode, map[string]string{"error": err.Error()})
 			return
 		}
 
@@ -49,12 +48,7 @@ func NewSubscribeHandler(log *slog.Logger, subscribe *usecase.Subscribe) http.Ha
 			CreatedAt: subscription.CreatedAt,
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
-		err = json.NewEncoder(w).Encode(response)
-		if err != nil {
-			log.Error("failed to write subscription response", "error", err)
-		}
+		writeJSON(w, log, http.StatusOK, response)
 	}
 }
 
@@ -72,7 +66,7 @@ func NewUnsubscribeHandler(log *slog.Logger, unsubscribe *usecase.Unsubscribe) h
 		owner := r.PathValue("owner")
 		repo := r.PathValue("repo")
 		if owner == "" || repo == "" {
-			writeJSONError(w, http.StatusBadRequest, "owner and repo are required")
+			writeJSON(w, log, http.StatusBadRequest, map[string]string{"error": "owner and repo are required"})
 			return
 		}
 
@@ -80,18 +74,13 @@ func NewUnsubscribeHandler(log *slog.Logger, unsubscribe *usecase.Unsubscribe) h
 		if err != nil {
 			httpCode := DomainErrToHTTP(err)
 			log.Error("failed to unsubscribe repository", "error", err)
-			writeJSONError(w, httpCode, err.Error())
+			writeJSON(w, log, httpCode, map[string]string{"error": err.Error()})
 			return
 		}
 
 		log.Info("repository unsubscribed", "owner", owner, "repo", repo)
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		err = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
-		if err != nil {
-			log.Error("failed to write unsubscription response", "error", err)
-		}
+		writeJSON(w, log, http.StatusOK, map[string]string{"status": "ok"})
 	}
 }
 
@@ -105,9 +94,9 @@ func NewListSubscriptionsHandler(log *slog.Logger, subscriptions *usecase.GetSub
 	return func(w http.ResponseWriter, r *http.Request) {
 		resp, err := subscriptions.Execute(r.Context())
 		if err != nil {
-			httpCode := DomainErrToHTTP(err)
 			log.Error("failed to list subscriptions", "error", err)
-			writeJSONError(w, httpCode, err.Error())
+			httpCode := DomainErrToHTTP(err)
+			writeJSON(w, log, httpCode, map[string]string{"error": err.Error()})
 			return
 		}
 
@@ -122,11 +111,7 @@ func NewListSubscriptionsHandler(log *slog.Logger, subscriptions *usecase.GetSub
 
 		log.Info("subscriptions listed", "count", len(result))
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(result); err != nil {
-			log.Error("failed to write subscriptions response", "error", err)
-		}
+		writeJSON(w, log, http.StatusOK, result)
 	}
 }
 
@@ -140,9 +125,9 @@ func NewSubscriptionsInfoHandler(log *slog.Logger, subscriptionsInfo *usecase.Ge
 	return func(w http.ResponseWriter, r *http.Request) {
 		resp, err := subscriptionsInfo.Execute(r.Context())
 		if err != nil {
-			httpCode := DomainErrToHTTP(err)
 			log.Error("failed to fetch subscriptions info", "error", err)
-			writeJSONError(w, httpCode, err.Error())
+			httpCode := DomainErrToHTTP(err)
+			writeJSON(w, log, httpCode, map[string]string{"error": err.Error()})
 			return
 		}
 
@@ -153,10 +138,6 @@ func NewSubscriptionsInfoHandler(log *slog.Logger, subscriptionsInfo *usecase.Ge
 
 		log.Info("subscriptions info fetched", "count", len(result))
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(result); err != nil {
-			log.Error("failed to write subscriptions info response", "error", err)
-		}
+		writeJSON(w, log, http.StatusOK, result)
 	}
 }
