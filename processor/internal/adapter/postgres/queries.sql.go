@@ -116,42 +116,6 @@ func (q *Queries) InsertRepo(ctx context.Context, arg InsertRepoParams) error {
 	return err
 }
 
-const listAllRepos = `-- name: ListAllRepos :many
-SELECT id, full_name, description, stargazers_count, forks_count, created_at, repo_status, error_code, updated_at
-FROM repositories
-ORDER BY full_name
-`
-
-func (q *Queries) ListAllRepos(ctx context.Context) ([]Repository, error) {
-	rows, err := q.db.Query(ctx, listAllRepos)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Repository
-	for rows.Next() {
-		var i Repository
-		if err := rows.Scan(
-			&i.ID,
-			&i.FullName,
-			&i.Description,
-			&i.StargazersCount,
-			&i.ForksCount,
-			&i.CreatedAt,
-			&i.RepoStatus,
-			&i.ErrorCode,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const updateRepoStatus = `-- name: UpdateRepoStatus :exec
 INSERT INTO repositories (full_name, repo_status, error_code, updated_at)
 VALUES ($1, $2, $3, NOW()) ON CONFLICT (full_name) DO

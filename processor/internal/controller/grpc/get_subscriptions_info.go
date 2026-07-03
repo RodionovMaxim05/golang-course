@@ -9,6 +9,10 @@ import (
 	processorpb "repo-watcher/proto/gen/go/processor/v1"
 )
 
+// GetSubscriptionsInfo returns aggregated metrics for all repositories the
+// user is actively subscribed to. Repositories that have not yet been
+// successfully collected (PENDING or ERROR status) are silently omitted
+// from the response.
 func (s *Server) GetSubscriptionsInfo(ctx context.Context, req *processorpb.GetSubsInfoRequest) (*processorpb.GetSubsInfoResponse, error) {
 	s.log.Debug("processor get subscriptions info request received")
 

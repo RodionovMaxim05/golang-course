@@ -12,6 +12,10 @@ import (
 	processorpb "repo-watcher/proto/gen/go/processor/v1"
 )
 
+// GetRepo handles a client request for repository information. It returns
+// the cached data if available and successfully processed, a PENDING
+// status if the data is still being collected, or a gRPC error mapped
+// from the underlying use case/storage error.
 func (s *Server) GetRepo(ctx context.Context, req *processorpb.GetRepoRequest) (*processorpb.GetRepoResponse, error) {
 	s.log.Debug("processor get repo request received", "owner", req.Owner, "repo", req.Repo)
 
@@ -25,7 +29,7 @@ func (s *Server) GetRepo(ctx context.Context, req *processorpb.GetRepoRequest) (
 		}
 
 		s.log.Error("usecase execution failed", "error", err)
-		return nil, status.Errorf(codes.Internal, "internal server error: %v", err)
+		return nil, mapUseCaseError(err)
 	}
 
 	switch resp.Status {
@@ -37,10 +41,7 @@ func (s *Server) GetRepo(ctx context.Context, req *processorpb.GetRepoRequest) (
 
 	case domain.StatusError:
 		s.log.Warn("repository found in DB with ERROR status", "repo", resp.FullName, "code", resp.ErrorCode)
-		if resp.ErrorCode == "REPOSITORY_NOT_FOUND" {
-			return nil, status.Errorf(codes.NotFound, "repository %s not found on github", resp.FullName)
-		}
-		return nil, status.Errorf(codes.ResourceExhausted, "failed to collect repository data: %s", resp.ErrorCode)
+		return nil, mapRepoErrorCode(resp.FullName, resp.ErrorCode)
 
 	case domain.StatusSuccess:
 		return &processorpb.GetRepoResponse{
@@ -55,5 +56,37 @@ func (s *Server) GetRepo(ctx context.Context, req *processorpb.GetRepoRequest) (
 	default:
 		s.log.Error("unknown repository status in database", "status", resp.Status)
 		return nil, status.Error(codes.Internal, "internal data error")
+	}
+}
+
+// mapUseCaseError translates an error returned by the GetRepo use case
+// into an appropriate gRPC status. Errors not recognized as one of the
+// known domain sentinel errors default to codes.Internal.
+func mapUseCaseError(err error) error {
+	switch {
+	case errors.Is(err, domain.ErrNotFound):
+		return status.Error(codes.NotFound, "repository not found")
+	case errors.Is(err, domain.ErrInvalidArgument):
+		return status.Errorf(codes.InvalidArgument, "invalid argument: %v", err)
+	case errors.Is(err, domain.ErrRateLimited):
+		return status.Error(codes.ResourceExhausted, "rate limit exceeded")
+	default:
+		return status.Errorf(codes.Internal, "internal server error: %v", err)
+	}
+}
+
+// mapRepoErrorCode translates a domain.ErrorCode, previously reported by
+// the Collector and persisted for a repository in ERROR status, into an
+// appropriate gRPC status for the client.
+func mapRepoErrorCode(fullName string, code domain.ErrorCode) error {
+	switch code {
+	case domain.ErrorCodeRepositoryNotFound:
+		return status.Errorf(codes.NotFound, "repository %s not found on github", fullName)
+	case domain.ErrorCodeGitHubRateLimitExceeded:
+		return status.Error(codes.ResourceExhausted, "github rate limit exceeded while collecting repository data")
+	case domain.ErrorCodeInternalCollectorError, domain.ErrorCodeUnspecified:
+		return status.Errorf(codes.Internal, "failed to collect repository data for %s", fullName)
+	default:
+		return status.Errorf(codes.Internal, "failed to collect repository data: unknown error code %q", code)
 	}
 }

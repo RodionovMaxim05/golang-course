@@ -24,6 +24,8 @@ func NewDBRepository(pool *pgxpool.Pool) *RepositoryAdapter {
 	}
 }
 
+// InsertRepo persists a newly (or re-)collected repository record,
+// overwriting any existing row with the same full name.
 func (r *RepositoryAdapter) InsertRepo(ctx context.Context, repo *domain.Repository) error {
 	err := r.queries.InsertRepo(ctx, InsertRepoParams{
 		FullName:        repo.FullName,
@@ -32,7 +34,7 @@ func (r *RepositoryAdapter) InsertRepo(ctx context.Context, repo *domain.Reposit
 		ForksCount:      int32(repo.ForksCount),
 		CreatedAt:       pgtype.Timestamptz{Time: repo.CreatedAt, Valid: true},
 		RepoStatus:      repo.Status.String(),
-		ErrorCode:       pgtype.Text{String: repo.ErrorCode, Valid: repo.ErrorCode != ""},
+		ErrorCode:       pgtype.Text{String: repo.ErrorCode.String(), Valid: repo.ErrorCode != domain.ErrorCodeUnspecified},
 	})
 	if err != nil {
 		return fmt.Errorf("insert/upsert repo into db: %w", err)
@@ -41,11 +43,13 @@ func (r *RepositoryAdapter) InsertRepo(ctx context.Context, repo *domain.Reposit
 	return nil
 }
 
+// UpdateRepoStatus updates the processing status (and error code, if any)
+// of an existing repository record.
 func (r *RepositoryAdapter) UpdateRepoStatus(ctx context.Context, repo *domain.Repository) error {
 	err := r.queries.UpdateRepoStatus(ctx, UpdateRepoStatusParams{
 		FullName:   repo.FullName,
 		RepoStatus: repo.Status.String(),
-		ErrorCode:  pgtype.Text{String: repo.ErrorCode, Valid: repo.ErrorCode != ""},
+		ErrorCode:  pgtype.Text{String: repo.ErrorCode.String(), Valid: repo.ErrorCode != domain.ErrorCodeUnspecified},
 	})
 	if err != nil {
 		return fmt.Errorf("update repo status in db: %w", err)
@@ -54,6 +58,8 @@ func (r *RepositoryAdapter) UpdateRepoStatus(ctx context.Context, repo *domain.R
 	return nil
 }
 
+// GetRepo retrieves a single repository by its full name ("owner/repo").
+// Returns domain.ErrNotFound if no matching record exists.
 func (r *RepositoryAdapter) GetRepo(ctx context.Context, fullName string) (*domain.Repository, error) {
 	row, err := r.queries.GetRepo(ctx, fullName)
 	if err != nil {
@@ -67,6 +73,8 @@ func (r *RepositoryAdapter) GetRepo(ctx context.Context, fullName string) (*doma
 	return toRepository(row), nil
 }
 
+// GetReposByNames retrieves all repository records matching the given
+// full names. Missing names are simply omitted from the result.
 func (r *RepositoryAdapter) GetReposByNames(ctx context.Context, fullNames []string) ([]*domain.Repository, error) {
 	if len(fullNames) == 0 {
 		return []*domain.Repository{}, nil
@@ -92,6 +100,6 @@ func toRepository(row Repository) *domain.Repository {
 		ForksCount:      int(row.ForksCount),
 		CreatedAt:       row.CreatedAt.Time,
 		Status:          domain.ParseStatus(row.RepoStatus),
-		ErrorCode:       row.ErrorCode.String,
+		ErrorCode:       domain.ErrorCode(row.ErrorCode.String),
 	}
 }

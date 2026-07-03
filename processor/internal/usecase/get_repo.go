@@ -5,20 +5,26 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+
 	"repo-watcher/processor/internal/domain"
 )
 
-type RepoGetter interface {
+type RepoFetchRequester interface {
 	SendRepoRequest(ctx context.Context, owner, repo string) error
+}
+
+type RepoStorage interface {
+	GetRepo(ctx context.Context, fullName string) (*domain.Repository, error)
+	UpdateRepoStatus(ctx context.Context, repo *domain.Repository) error
 }
 
 type GetRepo struct {
 	log         *slog.Logger
-	repoGetter  RepoGetter
-	dataStorage domain.DataStorage
+	repoGetter  RepoFetchRequester
+	dataStorage RepoStorage
 }
 
-func NewGetRepo(repoGetter RepoGetter, storage domain.DataStorage, log *slog.Logger) *GetRepo {
+func NewGetRepo(repoGetter RepoFetchRequester, storage RepoStorage, log *slog.Logger) *GetRepo {
 	return &GetRepo{
 		log:         log,
 		repoGetter:  repoGetter,
@@ -26,6 +32,11 @@ func NewGetRepo(repoGetter RepoGetter, storage domain.DataStorage, log *slog.Log
 	}
 }
 
+// Execute returns cached information for the repository identified by
+// owner/repo. If the repository is not present in local storage, it marks
+// the repository as PENDING, publishes an asynchronous fetch request via
+// the RepoFetchRequester port, and returns domain.ErrAccepted to indicate the
+// caller should retry later once the data has been collected.
 func (gr *GetRepo) Execute(ctx context.Context, owner, repo string) (*domain.Repository, error) {
 	fullName := fmt.Sprintf("%s/%s", owner, repo)
 

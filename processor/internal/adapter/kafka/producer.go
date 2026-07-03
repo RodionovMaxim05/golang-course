@@ -28,6 +28,7 @@ func NewProducerClient(cfg config.Kafka, log *slog.Logger) *ProducerClient {
 	}
 }
 
+// SendRepoRequest publishes a request to fetch data for the given owner/repo.
 func (pc *ProducerClient) SendRepoRequest(ctx context.Context, owner, repo string) error {
 	getRepoRequest := &processorpb.GetRepoRequest{
 		Owner: owner,
