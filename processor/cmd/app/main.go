@@ -17,7 +17,7 @@ import (
 	"repo-watcher/processor/internal/adapter/subscriber"
 	grpccontroller "repo-watcher/processor/internal/controller/grpc"
 	"repo-watcher/processor/internal/usecase"
-	processorpb "repo-watcher/proto/processor"
+	processorpb "repo-watcher/proto/gen/go/processor/v1"
 )
 
 func run(ctx context.Context) error {

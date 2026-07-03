@@ -5,7 +5,7 @@ import (
 	"log/slog"
 
 	"repo-watcher/processor/internal/usecase"
-	processorpb "repo-watcher/proto/processor"
+	processorpb "repo-watcher/proto/gen/go/processor/v1"
 )
 
 type Server struct {

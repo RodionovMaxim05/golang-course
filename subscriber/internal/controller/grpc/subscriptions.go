@@ -5,7 +5,7 @@ import (
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	subscriberpb "repo-watcher/proto/subscriber"
+	subscriberpb "repo-watcher/proto/gen/go/subscriber/v1"
 )
 
 func (s *Server) Subscribe(ctx context.Context, req *subscriberpb.SubscribeRequest) (*subscriberpb.SubscribeResponse, error) {

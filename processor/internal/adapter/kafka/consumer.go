@@ -10,7 +10,7 @@ import (
 
 	"repo-watcher/processor/config"
 	"repo-watcher/processor/internal/domain"
-	commonpb "repo-watcher/proto/common"
+	commonpb "repo-watcher/proto/gen/go/common/v1"
 )
 
 type ConsumerClient struct {

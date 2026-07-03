@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"repo-watcher/collector/internal/domain"
-	collectorpb "repo-watcher/proto/collector"
+	collectorpb "repo-watcher/proto/gen/go/collector/v1"
 )
 
 type GetRepoUsecase interface {
@@ -58,7 +58,7 @@ func (rw *RepoWorker) Start(ctx context.Context) {
 
 		rw.log.Debug("get message from Kafka")
 
-		var req collectorpb.GetRepoRequest
+		var req collectorpb.CollectRepoCmd
 		if err := proto.Unmarshal(message.Value, &req); err != nil {
 			rw.log.Error("error deserializing incoming task", "error", err)
 			continue

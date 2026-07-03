@@ -8,7 +8,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"repo-watcher/processor/config"
-	processorpb "repo-watcher/proto/processor"
+	processorpb "repo-watcher/proto/gen/go/processor/v1"
 )
 
 type ProducerClient struct {

@@ -11,7 +11,7 @@ import (
 
 	"repo-watcher/platform/grpcserver"
 	"repo-watcher/platform/logger"
-	subscriberpb "repo-watcher/proto/subscriber"
+	subscriberpb "repo-watcher/proto/gen/go/subscriber/v1"
 	"repo-watcher/subscriber/config"
 	"repo-watcher/subscriber/internal/adapter/github"
 	"repo-watcher/subscriber/internal/adapter/postgres"

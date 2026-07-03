@@ -10,7 +10,7 @@ import (
 
 	"repo-watcher/collector/config"
 	"repo-watcher/collector/internal/domain"
-	commonpb "repo-watcher/proto/common"
+	commonpb "repo-watcher/proto/gen/go/common/v1"
 )
 
 type ResultProducerAdapter struct {

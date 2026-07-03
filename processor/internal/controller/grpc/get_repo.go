@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"repo-watcher/processor/internal/domain"
-	processorpb "repo-watcher/proto/processor"
+	processorpb "repo-watcher/proto/gen/go/processor/v1"
 )
 
 func (s *Server) GetRepo(ctx context.Context, req *processorpb.GetRepoRequest) (*processorpb.GetRepoResponse, error) {

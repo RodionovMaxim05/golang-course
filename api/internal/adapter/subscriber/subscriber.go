@@ -9,7 +9,7 @@ import (
 
 	grpcAdapter "repo-watcher/api/internal/adapter/grpc"
 	"repo-watcher/api/internal/domain"
-	subscriberpb "repo-watcher/proto/subscriber"
+	subscriberpb "repo-watcher/proto/gen/go/subscriber/v1"
 )
 
 type Client struct {
