@@ -18,6 +18,8 @@ func DomainErrToHTTP(err error) int {
 		return http.StatusServiceUnavailable
 	case domain.ErrInvalidArgument:
 		return http.StatusBadRequest
+	case domain.ErrInternal:
+		return http.StatusAccepted
 	default:
 		return http.StatusInternalServerError
 	}

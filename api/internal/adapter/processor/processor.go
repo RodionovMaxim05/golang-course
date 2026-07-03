@@ -81,21 +81,31 @@ func (c *Client) GetRepo(ctx context.Context, owner, repo string) (domain.Reposi
 		return domain.Repository{}, grpcAdapter.ErrToDomain(err)
 	}
 
-	result := domain.Repository{
-		FullName:    resp.FullName,
-		Description: resp.Description,
-		Stargazers:  int(resp.StargazersCount),
-		Forks:       int(resp.ForksCount),
-		CreatedAt:   resp.CreatedAt.AsTime(),
-	}
+	switch resp.Status {
+	case processorpb.GetRepoResponse_STATUS_PENDING:
+		return domain.Repository{}, domain.ErrPending
 
-	if jsonBytes, err := json.Marshal(result); err == nil {
-		if err := c.cache.Set(ctx, cacheKey, jsonBytes, c.cacheTTL); err != nil {
-			c.log.Error("failed to update repo cache", "key", cacheKey, "error", err)
+	case processorpb.GetRepoResponse_STATUS_SUCCESS:
+		result := domain.Repository{
+			FullName:    resp.FullName,
+			Description: resp.Description,
+			Stargazers:  int(resp.StargazersCount),
+			Forks:       int(resp.ForksCount),
+			CreatedAt:   resp.CreatedAt.AsTime(),
 		}
-	}
 
-	return result, nil
+		if jsonBytes, err := json.Marshal(result); err == nil {
+			if err := c.cache.Set(ctx, cacheKey, jsonBytes, c.cacheTTL); err != nil {
+				c.log.Error("failed to update repo cache", "key", cacheKey, "error", err)
+			}
+		}
+
+		return result, nil
+
+	default:
+		c.log.Error("unexpected repository status from processor", "status", resp.Status)
+		return domain.Repository{}, domain.ErrInternal
+	}
 }
 
 func (c *Client) GetSubscriptionsInfo(ctx context.Context) ([]domain.Repository, error) {
