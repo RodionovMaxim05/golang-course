@@ -10,4 +10,5 @@ var (
 	ErrUnavailable     = errors.New("service unavailable")
 	ErrInvalidArgument = errors.New("invalid argument")
 	ErrInternal        = errors.New("internal error")
+	ErrPending         = errors.New("repository data collection in progress")
 )

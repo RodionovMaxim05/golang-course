@@ -23,6 +23,7 @@ func (s *Server) GetSubscriptionsInfo(ctx context.Context, req *processorpb.GetS
 		}
 
 		repositories = append(repositories, &processorpb.GetRepoResponse{
+			Status:          processorpb.GetRepoResponse_STATUS_SUCCESS,
 			FullName:        repo.FullName,
 			Description:     repo.Description,
 			StargazersCount: int32(repo.StargazersCount),

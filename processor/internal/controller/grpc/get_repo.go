@@ -19,7 +19,9 @@ func (s *Server) GetRepo(ctx context.Context, req *processorpb.GetRepoRequest) (
 	if err != nil {
 		if errors.Is(err, domain.ErrAccepted) {
 			s.log.Debug("repository is processing, returning Accepted status", "owner", req.Owner, "repo", req.Repo)
-			return nil, status.Error(codes.Unavailable, "repository data is being collected, try again later")
+			return &processorpb.GetRepoResponse{
+				Status: processorpb.GetRepoResponse_STATUS_PENDING,
+			}, nil
 		}
 
 		s.log.Error("usecase execution failed", "error", err)
@@ -29,7 +31,9 @@ func (s *Server) GetRepo(ctx context.Context, req *processorpb.GetRepoRequest) (
 	switch resp.Status {
 	case "PENDING":
 		s.log.Debug("repository found in DB but still has PENDING status", "repo", resp.FullName)
-		return nil, status.Error(codes.Unavailable, "repository data is still being collected")
+		return &processorpb.GetRepoResponse{
+			Status: processorpb.GetRepoResponse_STATUS_PENDING,
+		}, nil
 
 	case "ERROR":
 		s.log.Warn("repository found in DB with ERROR status", "repo", resp.FullName, "code", resp.ErrorCode)
@@ -40,6 +44,7 @@ func (s *Server) GetRepo(ctx context.Context, req *processorpb.GetRepoRequest) (
 
 	case "SUCCESS":
 		return &processorpb.GetRepoResponse{
+			Status:          processorpb.GetRepoResponse_STATUS_SUCCESS,
 			FullName:        resp.FullName,
 			Description:     resp.Description,
 			StargazersCount: int32(resp.StargazersCount),
