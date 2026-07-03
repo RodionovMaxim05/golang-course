@@ -13,6 +13,11 @@ PROTOC_GEN_GO_VERSION := v1.32.0
 PROTOC_GEN_GO_GRPC_VERSION := v1.6.1
 GOLANGCI_LINT_VERSION := v2.11.2
 
+PROTO_FILES := proto/subscriber/v1/subscriber.proto \
+               proto/collector/v1/messages.proto \
+               proto/processor/v1/processor.proto \
+               proto/common/v1/events.proto
+
 .PHONY: check-container-runtime up down down-volumes \
 	run-tests integration-test unit-test \
 	lint fix protobuf protolint gofmtcheck golint swagger tools help
@@ -60,21 +65,9 @@ fix: ## Auto-fix proto/go formatting and lint issues
 
 protobuf: ## Compile protobuf files
 	PATH="$(GOBIN):$$PATH" protoc \
-		--go_out=. --go_opt=paths=source_relative \
-		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
-		proto/subscriber/subscriber.proto
-	PATH="$(GOBIN):$$PATH" protoc \
-		--go_out=. --go_opt=paths=source_relative \
-		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
-		proto/collector/collector.proto
-	PATH="$(GOBIN):$$PATH" protoc \
-		--go_out=. --go_opt=paths=source_relative \
-		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
-		proto/processor/processor.proto
-	PATH="$(GOBIN):$$PATH" protoc \
-		--go_out=. --go_opt=paths=source_relative \
-		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
-		proto/common/events.proto
+		--go_out=. --go_opt=module=repo-watcher \
+		--go-grpc_out=. --go-grpc_opt=module=repo-watcher \
+		$(PROTO_FILES)
 
 protolint: ## Lint .proto files
 	$(PROTOLINT) .

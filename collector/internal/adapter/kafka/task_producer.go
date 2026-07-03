@@ -8,7 +8,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"repo-watcher/collector/config"
-	collectorpb "repo-watcher/proto/collector"
+	collectorpb "repo-watcher/proto/gen/go/collector/v1"
 )
 
 type TaskProducerAdapter struct {
@@ -29,7 +29,7 @@ func NewTaskProducerAdapter(cfg config.Kafka, log *slog.Logger) *TaskProducerAda
 }
 
 func (tpa *TaskProducerAdapter) SendCollectionTask(ctx context.Context, owner, repo string) error {
-	getRepoRequest := &collectorpb.GetRepoRequest{
+	getRepoRequest := &collectorpb.CollectRepoCmd{
 		Owner: owner,
 		Repo:  repo,
 	}

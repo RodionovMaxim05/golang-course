@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 
-	subscriberpb "repo-watcher/proto/subscriber"
+	subscriberpb "repo-watcher/proto/gen/go/subscriber/v1"
 	"repo-watcher/subscriber/internal/usecase"
 )
 

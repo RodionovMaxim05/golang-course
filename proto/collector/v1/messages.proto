@@ -1,12 +1,10 @@
 syntax = "proto3";
 
-package api;
-
-import "google/protobuf/timestamp.proto";
+package collector.v1;
 
 option go_package = "repo-watcher/proto/gen/go/collector/v1;collectorv1";
 
-message GetRepoRequest {
+message CollectRepoCmd {
   string owner = 1;
   string repo = 2;
 }

@@ -3,7 +3,7 @@ package grpc
 import (
 	"context"
 
-	processorpb "repo-watcher/proto/processor"
+	processorpb "repo-watcher/proto/gen/go/processor/v1"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

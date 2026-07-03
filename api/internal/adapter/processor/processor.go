@@ -12,7 +12,7 @@ import (
 
 	grpcAdapter "repo-watcher/api/internal/adapter/grpc"
 	"repo-watcher/api/internal/domain"
-	processorpb "repo-watcher/proto/processor"
+	processorpb "repo-watcher/proto/gen/go/processor/v1"
 )
 
 type CacheClient interface {

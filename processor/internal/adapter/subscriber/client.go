@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	subscribepb "repo-watcher/proto/subscriber"
+	subscribepb "repo-watcher/proto/gen/go/subscriber/v1"
 )
 
 type Client struct {
