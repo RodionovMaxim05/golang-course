@@ -141,7 +141,7 @@ curl "http://localhost:28080/api/repositories/info?url=https://github.com/golang
 #### List Subscriptions
 
 ```
-GET /subscriptions
+GET /api/subscriptions
 ```
 
 Returns all subscribed repositories with creation timestamps:
@@ -149,7 +149,7 @@ Returns all subscribed repositories with creation timestamps:
 **Example:**
 
 ```bash
-curl "http://localhost:28080/subscriptions"
+curl "http://localhost:28080/api/subscriptions"
 ```
 
 **Response:**
@@ -172,7 +172,7 @@ curl "http://localhost:28080/subscriptions"
 #### Subscribe to Repository
 
 ```
-POST /subscriptions?url=<github_repo_url>
+POST /api/subscriptions?url=<github_repo_url>
 ```
 
 Subscribe to a GitHub repository for monitoring:
@@ -180,7 +180,7 @@ Subscribe to a GitHub repository for monitoring:
 **Example:**
 
 ```bash
-curl -X POST "http://localhost:28080/subscriptions?url=https://github.com/golang/go"
+curl -X POST "http://localhost:28080/api/subscriptions?url=https://github.com/golang/go"
 ```
 
 **Response:**
@@ -196,7 +196,7 @@ curl -X POST "http://localhost:28080/subscriptions?url=https://github.com/golang
 #### Unsubscribe from Repository
 
 ```
-DELETE /subscriptions/{owner}/{repo}
+DELETE /api/subscriptions/{owner}/{repo}
 ```
 
 Remove subscription for a specific repository:
@@ -204,13 +204,13 @@ Remove subscription for a specific repository:
 **Example:**
 
 ```bash
-curl -X DELETE "http://localhost:28080/subscriptions/golang/go"
+curl -X DELETE "http://localhost:28080/api/subscriptions/golang/go"
 ```
 
 #### Get Subscribed Repositories Info
 
 ```
-GET /subscriptions/info
+GET /api/subscriptions/info
 ```
 
 Retrieve aggregated information for all subscribed repositories:
@@ -218,7 +218,7 @@ Retrieve aggregated information for all subscribed repositories:
 **Example:**
 
 ```bash
-curl "http://localhost:28080/subscriptions/info"
+curl "http://localhost:28080/api/subscriptions/info"
 ```
 
 **Response:**
