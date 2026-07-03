@@ -16,19 +16,19 @@ type Services struct {
 }
 
 type Kafka struct {
-	Address       string `yaml:"address" env:"KAFKA_ADDRESS" env-default:"kafka:9092"`
+	Address       string `yaml:"address"        env:"KAFKA_ADDRESS"        env-default:"kafka:9092"`
 	ProducerTopic string `yaml:"producer_topic" env:"KAFKA_PRODUCER_TOPIC" required:"true"`
 	ConsumerTopic string `yaml:"consumer_topic" env:"KAFKA_CONSUMER_TOPIC" required:"true"`
-	GroupID       string `yaml:"group_id" env:"KAFKA_GROUP_ID" env-default:"default-group"`
+	GroupID       string `yaml:"group_id"       env:"KAFKA_GROUP_ID"       env-default:"default-group"`
 }
 
 type Database struct {
-	User     string `yaml:"user" env:"PROC_POSTGRES_USER" env-default:"proc_user"`
+	User     string `yaml:"user"     env:"PROC_POSTGRES_USER"     env-default:"proc_user"`
 	Password string `yaml:"password" env:"PROC_POSTGRES_PASSWORD" env-default:"proc_password"`
-	Host     string `yaml:"host" env:"PROC_POSTGRES_HOST" env-default:"localhost"`
-	Port     int    `yaml:"port" env:"PROC_POSTGRES_PORT" env-default:"5432"`
-	Name     string `yaml:"name" env:"PROC_POSTGRES_DB" env-default:"processor_db"`
-	SSLMode  string `yaml:"sslmode" env:"PROC_POSTGRES_SSLMODE" env-default:"disable"`
+	Host     string `yaml:"host"     env:"PROC_POSTGRES_HOST"     env-default:"localhost"`
+	Port     int    `yaml:"port"     env:"PROC_POSTGRES_PORT"     env-default:"5432"`
+	Name     string `yaml:"name"     env:"PROC_POSTGRES_DB"       env-default:"processor_db"`
+	SSLMode  string `yaml:"sslmode"  env:"PROC_POSTGRES_SSLMODE"  env-default:"disable"`
 }
 
 func (d Database) URL() string {
