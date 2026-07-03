@@ -12,7 +12,7 @@ type App struct {
 
 type Services struct {
 	Subscriber string `yaml:"subscriber" env:"SUBSCRIBER_ADDRESS" env-default:"localhost:8081"`
-	Processor  string `yaml:"processor" env:"PROCESSOR_ADDRESS" env-default:"localhost:8083"`
+	Processor  string `yaml:"processor"  env:"PROCESSOR_ADDRESS"  env-default:"localhost:8083"`
 }
 
 type Redis struct {
@@ -25,7 +25,7 @@ type Cache struct {
 
 type RateLimit struct {
 	RequestsPerSecond int `yaml:"requests_per_second" env:"RATE_LIMIT_REQUESTS_PER_SECOND" env-default:"5"`
-	Burst             int `yaml:"burst" env:"RATE_LIMIT_BURST" env-default:"10"`
+	Burst             int `yaml:"burst"               env:"RATE_LIMIT_BURST"               env-default:"10"`
 }
 
 type Config struct {

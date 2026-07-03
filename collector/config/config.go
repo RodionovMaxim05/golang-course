@@ -16,10 +16,10 @@ type Services struct {
 }
 
 type Kafka struct {
-	Address       string `yaml:"address" env:"KAFKA_ADDRESS" env-default:"kafka:9092"`
+	Address       string `yaml:"address"        env:"KAFKA_ADDRESS"        env-default:"kafka:9092"`
 	ProducerTopic string `yaml:"producer_topic" env:"KAFKA_PRODUCER_TOPIC" required:"true"`
 	ConsumerTopic string `yaml:"consumer_topic" env:"KAFKA_CONSUMER_TOPIC" required:"true"`
-	GroupID       string `yaml:"group_id" env:"KAFKA_GROUP_ID" env-default:"default-group"`
+	GroupID       string `yaml:"group_id"       env:"KAFKA_GROUP_ID"       env-default:"default-group"`
 }
 
 type Config struct {
