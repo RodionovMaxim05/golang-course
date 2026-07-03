@@ -29,20 +29,20 @@ func (s *Server) GetRepo(ctx context.Context, req *processorpb.GetRepoRequest) (
 	}
 
 	switch resp.Status {
-	case "PENDING":
+	case domain.StatusPending:
 		s.log.Debug("repository found in DB but still has PENDING status", "repo", resp.FullName)
 		return &processorpb.GetRepoResponse{
 			Status: processorpb.GetRepoResponse_STATUS_PENDING,
 		}, nil
 
-	case "ERROR":
+	case domain.StatusError:
 		s.log.Warn("repository found in DB with ERROR status", "repo", resp.FullName, "code", resp.ErrorCode)
 		if resp.ErrorCode == "REPOSITORY_NOT_FOUND" {
 			return nil, status.Errorf(codes.NotFound, "repository %s not found on github", resp.FullName)
 		}
 		return nil, status.Errorf(codes.ResourceExhausted, "failed to collect repository data: %s", resp.ErrorCode)
 
-	case "SUCCESS":
+	case domain.StatusSuccess:
 		return &processorpb.GetRepoResponse{
 			Status:          processorpb.GetRepoResponse_STATUS_SUCCESS,
 			FullName:        resp.FullName,

@@ -3,9 +3,10 @@ package grpc
 import (
 	"context"
 
-	processorpb "repo-watcher/proto/gen/go/processor/v1"
-
 	"google.golang.org/protobuf/types/known/timestamppb"
+
+	"repo-watcher/processor/internal/domain"
+	processorpb "repo-watcher/proto/gen/go/processor/v1"
 )
 
 func (s *Server) GetSubscriptionsInfo(ctx context.Context, req *processorpb.GetSubsInfoRequest) (*processorpb.GetSubsInfoResponse, error) {
@@ -18,7 +19,7 @@ func (s *Server) GetSubscriptionsInfo(ctx context.Context, req *processorpb.GetS
 
 	repositories := make([]*processorpb.GetRepoResponse, 0, len(resp))
 	for _, repo := range resp {
-		if repo.Status != "SUCCESS" {
+		if repo.Status != domain.StatusSuccess {
 			continue
 		}
 

@@ -70,7 +70,7 @@ func (cc *ConsumerClient) StartConsumer(ctx context.Context) {
 
 			repoEntity := domain.Repository{
 				FullName:  event.FullName,
-				Status:    "ERROR",
+				Status:    domain.StatusError,
 				ErrorCode: res.Error.GetCode(),
 			}
 
@@ -92,7 +92,7 @@ func (cc *ConsumerClient) StartConsumer(ctx context.Context) {
 				StargazersCount: int(successData.StargazersCount),
 				ForksCount:      int(successData.ForksCount),
 				CreatedAt:       successData.GetCreatedAt().AsTime(),
-				Status:          "SUCCESS",
+				Status:          domain.StatusSuccess,
 				ErrorCode:       "",
 			}
 
