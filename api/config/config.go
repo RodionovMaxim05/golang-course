@@ -15,11 +15,27 @@ type Services struct {
 	Processor  string `yaml:"processor" env:"PROCESSOR_ADDRESS" env-default:"localhost:8083"`
 }
 
+type Redis struct {
+	Address string `yaml:"address" env:"REDIS_ADDRESS" env-default:"localhost:6379"`
+}
+
+type Cache struct {
+	TTL int `yaml:"ttl_seconds" env:"CACHE_TTL_SECONDS" env-default:"60"`
+}
+
+type RateLimit struct {
+	RequestsPerSecond int `yaml:"requests_per_second" env:"RATE_LIMIT_REQUESTS_PER_SECOND" env-default:"5"`
+	Burst             int `yaml:"burst" env:"RATE_LIMIT_BURST" env-default:"10"`
+}
+
 type Config struct {
-	App      App               `yaml:"app"`
-	Services Services          `yaml:"services"`
-	HTTP     httpserver.Config `yaml:"http"`
-	Logger   logger.Config     `yaml:"logger"`
+	App       App               `yaml:"app"`
+	Services  Services          `yaml:"services"`
+	HTTP      httpserver.Config `yaml:"http"`
+	Redis     Redis             `yaml:"redis"`
+	Cache     Cache             `yaml:"cache"`
+	RateLimit RateLimit         `yaml:"rate_limit"`
+	Logger    logger.Config     `yaml:"logger"`
 }
 
 func MustLoad(path string) Config {

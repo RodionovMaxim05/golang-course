@@ -1,9 +1,7 @@
 package http
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/url"
 	"strings"
 )
@@ -20,10 +18,4 @@ func parseGitHubURL(rawURL string) (owner, repo string, err error) {
 	}
 
 	return parts[0], parts[1], nil
-}
-
-func writeJSONError(w http.ResponseWriter, statusCode int, message string) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	_ = json.NewEncoder(w).Encode(map[string]string{"error": message})
 }
