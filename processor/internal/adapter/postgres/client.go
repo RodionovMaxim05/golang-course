@@ -31,7 +31,7 @@ func (r *RepositoryAdapter) InsertRepo(ctx context.Context, repo *domain.Reposit
 		StargazersCount: int32(repo.StargazersCount),
 		ForksCount:      int32(repo.ForksCount),
 		CreatedAt:       pgtype.Timestamptz{Time: repo.CreatedAt, Valid: true},
-		RepoStatus:      repo.Status,
+		RepoStatus:      repo.Status.String(),
 		ErrorCode:       pgtype.Text{String: repo.ErrorCode, Valid: repo.ErrorCode != ""},
 	})
 	if err != nil {
@@ -44,7 +44,7 @@ func (r *RepositoryAdapter) InsertRepo(ctx context.Context, repo *domain.Reposit
 func (r *RepositoryAdapter) UpdateRepoStatus(ctx context.Context, repo *domain.Repository) error {
 	err := r.queries.UpdateRepoStatus(ctx, UpdateRepoStatusParams{
 		FullName:   repo.FullName,
-		RepoStatus: repo.Status,
+		RepoStatus: repo.Status.String(),
 		ErrorCode:  pgtype.Text{String: repo.ErrorCode, Valid: repo.ErrorCode != ""},
 	})
 	if err != nil {
@@ -91,7 +91,7 @@ func toRepository(row Repository) *domain.Repository {
 		StargazersCount: int(row.StargazersCount),
 		ForksCount:      int(row.ForksCount),
 		CreatedAt:       row.CreatedAt.Time,
-		Status:          row.RepoStatus,
+		Status:          domain.ParseStatus(row.RepoStatus),
 		ErrorCode:       row.ErrorCode.String,
 	}
 }

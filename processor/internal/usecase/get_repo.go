@@ -38,7 +38,7 @@ func (gr *GetRepo) Execute(ctx context.Context, owner, repo string) (*domain.Rep
 	if errors.Is(err, domain.ErrNotFound) {
 		pendingRepo := &domain.Repository{
 			FullName: fullName,
-			Status:   "PENDING",
+			Status:   domain.StatusPending,
 		}
 		if dbErr := gr.dataStorage.UpdateRepoStatus(ctx, pendingRepo); dbErr != nil {
 			gr.log.Error("failed to save PENDING status to DB", "repo", fullName, "error", dbErr)
