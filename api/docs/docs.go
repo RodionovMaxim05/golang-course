@@ -23,13 +23,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/repo-stat_api_internal_dto.PingResponse"
+                            "$ref": "#/definitions/repo-watcher_api_internal_controller_http_dto.PingResponse"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/repo-stat_api_internal_dto.PingResponse"
+                            "$ref": "#/definitions/repo-watcher_api_internal_controller_http_dto.PingResponse"
                         }
                     }
                 }
@@ -37,7 +37,7 @@ const docTemplate = `{
         },
         "/api/repositories/info": {
             "get": {
-                "description": "Get basic information about a GitHub repository",
+                "description": "Get basic information about a GitHub repository. If the\nrepository's data has not been collected yet, returns 202\nwith an error message indicating the data is still being\nprocessed; retry the request later.",
                 "summary": "Get repository info",
                 "parameters": [
                     {
@@ -52,25 +52,67 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/repo-stat_api_internal_dto.RepoInfoResponse"
+                            "$ref": "#/definitions/repo-watcher_api_internal_controller_http_dto.RepoInfoResponse"
+                        }
+                    },
+                    "202": {
+                        "description": "repository data collection in progress, retry later",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "invalid or missing url",
                         "schema": {
-                            "type": "string"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "repository not found on GitHub",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "GitHub API rate limit exceeded",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "internal server error",
                         "schema": {
-                            "type": "string"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "processor service unavailable",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
             }
         },
-        "/subscriptions": {
+        "/api/subscriptions": {
             "get": {
                 "description": "Return all subscribed GitHub repositories",
                 "summary": "Get current subscription list",
@@ -80,17 +122,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/repo-stat_api_internal_dto.SubscriptionResponse"
+                                "$ref": "#/definitions/repo-watcher_api_internal_controller_http_dto.SubscriptionResponse"
                             }
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "internal server error",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/repo-watcher_api_internal_controller_http_dto.ErrorResponse"
                         }
                     }
                 }
@@ -114,31 +153,43 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/repo-stat_api_internal_dto.SubscriptionResponse"
+                            "$ref": "#/definitions/repo-watcher_api_internal_controller_http_dto.SubscriptionResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "invalid or missing url",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/repo-watcher_api_internal_controller_http_dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "repository not found on GitHub",
+                        "schema": {
+                            "$ref": "#/definitions/repo-watcher_api_internal_controller_http_dto.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "already subscribed",
+                        "schema": {
+                            "$ref": "#/definitions/repo-watcher_api_internal_controller_http_dto.ErrorResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "GitHub API rate limit exceeded",
+                        "schema": {
+                            "$ref": "#/definitions/repo-watcher_api_internal_controller_http_dto.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "internal server error",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/repo-watcher_api_internal_controller_http_dto.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/subscriptions/info": {
+        "/api/subscriptions/info": {
             "get": {
                 "description": "Retrieve aggregated information for all subscribed repositories",
                 "summary": "Get subscribed repositories info",
@@ -148,23 +199,20 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/repo-stat_api_internal_dto.RepoInfoResponse"
+                                "$ref": "#/definitions/repo-watcher_api_internal_controller_http_dto.RepoInfoResponse"
                             }
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "internal server error",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/repo-watcher_api_internal_controller_http_dto.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/subscriptions/{owner}/{repo}": {
+        "/api/subscriptions/{owner}/{repo}": {
             "delete": {
                 "description": "Remove subscription for GitHub repository",
                 "summary": "Unsubscribe from the repository",
@@ -189,25 +237,27 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "missing owner or repo",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/repo-watcher_api_internal_controller_http_dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "subscription not found",
+                        "schema": {
+                            "$ref": "#/definitions/repo-watcher_api_internal_controller_http_dto.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "internal server error",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/repo-watcher_api_internal_controller_http_dto.ErrorResponse"
                         }
                     }
                 }
@@ -215,13 +265,21 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "repo-stat_api_internal_dto.PingResponse": {
+        "repo-watcher_api_internal_controller_http_dto.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "repo-watcher_api_internal_controller_http_dto.PingResponse": {
             "type": "object",
             "properties": {
                 "services": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/repo-stat_api_internal_dto.ServiceStatus"
+                        "$ref": "#/definitions/repo-watcher_api_internal_controller_http_dto.ServiceStatus"
                     }
                 },
                 "status": {
@@ -229,7 +287,7 @@ const docTemplate = `{
                 }
             }
         },
-        "repo-stat_api_internal_dto.RepoInfoResponse": {
+        "repo-watcher_api_internal_controller_http_dto.RepoInfoResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -249,7 +307,7 @@ const docTemplate = `{
                 }
             }
         },
-        "repo-stat_api_internal_dto.ServiceStatus": {
+        "repo-watcher_api_internal_controller_http_dto.ServiceStatus": {
             "type": "object",
             "properties": {
                 "name": {
@@ -260,7 +318,7 @@ const docTemplate = `{
                 }
             }
         },
-        "repo-stat_api_internal_dto.SubscriptionResponse": {
+        "repo-watcher_api_internal_controller_http_dto.SubscriptionResponse": {
             "type": "object",
             "properties": {
                 "created_at": {

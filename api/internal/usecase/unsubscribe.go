@@ -4,20 +4,21 @@ import (
 	"context"
 )
 
-type Unsubscriber interface {
+type SubscriptionDeleter interface {
 	Unsubscribe(ctx context.Context, owner, repo string) error
 }
 
 type Unsubscribe struct {
-	subscriber Unsubscriber
+	client SubscriptionDeleter
 }
 
-func NewUnsubscriber(subscriber Unsubscriber) *Unsubscribe {
+func NewUnsubscriber(client SubscriptionDeleter) *Unsubscribe {
 	return &Unsubscribe{
-		subscriber: subscriber,
+		client: client,
 	}
 }
 
+// Execute removes the subscription for the given owner/repo.
 func (u *Unsubscribe) Execute(ctx context.Context, owner, repo string) error {
-	return u.subscriber.Unsubscribe(ctx, owner, repo)
+	return u.client.Unsubscribe(ctx, owner, repo)
 }

@@ -2,6 +2,7 @@ package subscriber
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	"google.golang.org/grpc"
@@ -24,7 +25,7 @@ func NewClient(address string, log *slog.Logger) (*Client, error) {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("connect to subscriber service: %w", err)
 	}
 
 	return &Client{
@@ -34,6 +35,7 @@ func NewClient(address string, log *slog.Logger) (*Client, error) {
 	}, nil
 }
 
+// Ping checks the liveness of the Subscriber service.
 func (c *Client) Ping(ctx context.Context) domain.PingStatus {
 	_, err := c.pb.Ping(ctx, &subscriberpb.PingRequest{})
 	if err != nil {
@@ -44,6 +46,8 @@ func (c *Client) Ping(ctx context.Context) domain.PingStatus {
 	return domain.PingStatusUp
 }
 
+// Subscribe creates a new subscription for the given owner/repo via the
+// Subscriber service.
 func (c *Client) Subscribe(ctx context.Context, owner, repo string) (*domain.Subscription, error) {
 	req := &subscriberpb.SubscribeRequest{
 		Subscription: &subscriberpb.Subscription{
@@ -65,6 +69,8 @@ func (c *Client) Subscribe(ctx context.Context, owner, repo string) (*domain.Sub
 	}, nil
 }
 
+// Unsubscribe removes an existing subscription for the given owner/repo
+// via the Subscriber service.
 func (c *Client) Unsubscribe(ctx context.Context, owner, repo string) error {
 	req := &subscriberpb.UnsubscribeRequest{
 		Subscription: &subscriberpb.Subscription{
@@ -82,6 +88,8 @@ func (c *Client) Unsubscribe(ctx context.Context, owner, repo string) error {
 	return nil
 }
 
+// GetSubscriptions returns the full list of currently active
+// subscriptions from the Subscriber service.
 func (c *Client) GetSubscriptions(ctx context.Context) ([]domain.Subscription, error) {
 	resp, err := c.pb.GetSubscriptions(ctx, &subscriberpb.GetSubsRequest{})
 	if err != nil {

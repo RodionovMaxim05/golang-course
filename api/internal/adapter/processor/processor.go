@@ -34,7 +34,7 @@ func NewClient(address string, cache CacheClient, ttl int, log *slog.Logger) (*C
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("connect to processor service: %w", err)
 	}
 
 	return &Client{
@@ -46,6 +46,7 @@ func NewClient(address string, cache CacheClient, ttl int, log *slog.Logger) (*C
 	}, nil
 }
 
+// Ping checks the liveness of the Processor service.
 func (c *Client) Ping(ctx context.Context) domain.PingStatus {
 	_, err := c.pb.Ping(ctx, &processorpb.PingRequest{})
 	if err != nil {
@@ -56,6 +57,9 @@ func (c *Client) Ping(ctx context.Context) domain.PingStatus {
 	return domain.PingStatusUp
 }
 
+// GetRepo returns cached repository information if available, otherwise
+// fetches it from the Processor service and caches the result. Returns
+// domain.ErrPending if the repository's data is still being collected.
 func (c *Client) GetRepo(ctx context.Context, owner, repo string) (domain.Repository, error) {
 	cacheKey := fmt.Sprintf("processor:repo:%s:%s", owner, repo)
 
@@ -87,11 +91,11 @@ func (c *Client) GetRepo(ctx context.Context, owner, repo string) (domain.Reposi
 
 	case processorpb.GetRepoResponse_STATUS_SUCCESS:
 		result := domain.Repository{
-			FullName:    resp.FullName,
-			Description: resp.Description,
-			Stargazers:  int(resp.StargazersCount),
-			Forks:       int(resp.ForksCount),
-			CreatedAt:   resp.CreatedAt.AsTime(),
+			FullName:        resp.FullName,
+			Description:     resp.Description,
+			StargazersCount: int(resp.StargazersCount),
+			ForksCount:      int(resp.ForksCount),
+			CreatedAt:       resp.CreatedAt.AsTime(),
 		}
 
 		if jsonBytes, err := json.Marshal(result); err == nil {
@@ -108,6 +112,9 @@ func (c *Client) GetRepo(ctx context.Context, owner, repo string) (domain.Reposi
 	}
 }
 
+// GetSubscriptionsInfo returns cached aggregated repository metrics for
+// all subscriptions if available, otherwise fetches them from the
+// Processor service and caches the result.
 func (c *Client) GetSubscriptionsInfo(ctx context.Context) ([]domain.Repository, error) {
 	cacheKey := "processor:subscriptions:all"
 
@@ -133,11 +140,11 @@ func (c *Client) GetSubscriptionsInfo(ctx context.Context) ([]domain.Repository,
 	result := make([]domain.Repository, 0, len(resp.Repositories))
 	for _, item := range resp.Repositories {
 		result = append(result, domain.Repository{
-			FullName:    item.FullName,
-			Description: item.Description,
-			Stargazers:  int(item.StargazersCount),
-			Forks:       int(item.ForksCount),
-			CreatedAt:   item.CreatedAt.AsTime(),
+			FullName:        item.FullName,
+			Description:     item.Description,
+			StargazersCount: int(item.StargazersCount),
+			ForksCount:      int(item.ForksCount),
+			CreatedAt:       item.CreatedAt.AsTime(),
 		})
 	}
 

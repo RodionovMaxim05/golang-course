@@ -22,8 +22,11 @@ func NewPing(subscriberPinger, processorPinger Pinger) *Ping {
 	}
 }
 
-func (u *Ping) Execute(ctx context.Context) (domain.PingStatus, domain.PingStatus) {
-	subscriberStatus := u.subscriberPinger.Ping(ctx)
-	processorStatus := u.processorPinger.Ping(ctx)
-	return subscriberStatus, processorStatus
+// Execute checks the liveness of the Subscriber and Processor services
+// and returns their individual statuses.
+func (u *Ping) Execute(ctx context.Context) domain.PingResult {
+	return domain.PingResult{
+		Subscriber: u.subscriberPinger.Ping(ctx),
+		Processor:  u.processorPinger.Ping(ctx),
+	}
 }

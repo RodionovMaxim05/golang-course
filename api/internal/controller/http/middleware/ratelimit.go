@@ -13,6 +13,10 @@ type RateLimiter interface {
 	Allow(ctx context.Context, key string) (bool, float64, error)
 }
 
+// RateLimit returns a middleware that enforces a per-client-IP rate limit
+// via the given RateLimiter. Requests are keyed by the remote peer's IP
+// address. If the limiter backend is unavailable, requests are allowed
+// through (fail open) to preserve availability.
 func RateLimit(limiter RateLimiter, log *slog.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

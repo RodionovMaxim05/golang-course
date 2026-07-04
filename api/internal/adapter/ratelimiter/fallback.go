@@ -23,6 +23,8 @@ func NewFallbackRateLimiter(primary, secondary RateLimiter, log *slog.Logger) *F
 	}
 }
 
+// Allow checks the primary rate limiter first, falling back to the
+// secondary limiter if the primary returns an error.
 func (frt *FallbackRateLimiter) Allow(ctx context.Context, key string) (bool, float64, error) {
 	allowed, remaining, err := frt.primary.Allow(ctx, key)
 	if err == nil {

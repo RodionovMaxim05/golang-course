@@ -1,15 +1,20 @@
 basePath: /
 definitions:
-  repo-stat_api_internal_dto.PingResponse:
+  repo-watcher_api_internal_controller_http_dto.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  repo-watcher_api_internal_controller_http_dto.PingResponse:
     properties:
       services:
         items:
-          $ref: '#/definitions/repo-stat_api_internal_dto.ServiceStatus'
+          $ref: '#/definitions/repo-watcher_api_internal_controller_http_dto.ServiceStatus'
         type: array
       status:
         type: string
     type: object
-  repo-stat_api_internal_dto.RepoInfoResponse:
+  repo-watcher_api_internal_controller_http_dto.RepoInfoResponse:
     properties:
       created_at:
         type: string
@@ -22,14 +27,14 @@ definitions:
       stars:
         type: integer
     type: object
-  repo-stat_api_internal_dto.ServiceStatus:
+  repo-watcher_api_internal_controller_http_dto.ServiceStatus:
     properties:
       name:
         type: string
       status:
         type: string
     type: object
-  repo-stat_api_internal_dto.SubscriptionResponse:
+  repo-watcher_api_internal_controller_http_dto.SubscriptionResponse:
     properties:
       created_at:
         type: string
@@ -52,15 +57,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/repo-stat_api_internal_dto.PingResponse'
+            $ref: '#/definitions/repo-watcher_api_internal_controller_http_dto.PingResponse'
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/repo-stat_api_internal_dto.PingResponse'
+            $ref: '#/definitions/repo-watcher_api_internal_controller_http_dto.PingResponse'
       summary: Ping services
   /api/repositories/info:
     get:
-      description: Get basic information about a GitHub repository
+      description: |-
+        Get basic information about a GitHub repository. If the
+        repository's data has not been collected yet, returns 202
+        with an error message indicating the data is still being
+        processed; retry the request later.
       parameters:
       - description: GitHub repository URL (e.g. https://github.com/golang/go)
         in: query
@@ -71,17 +80,45 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/repo-stat_api_internal_dto.RepoInfoResponse'
+            $ref: '#/definitions/repo-watcher_api_internal_controller_http_dto.RepoInfoResponse'
+        "202":
+          description: repository data collection in progress, retry later
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "400":
-          description: Bad Request
+          description: invalid or missing url
           schema:
-            type: string
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: repository not found on GitHub
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "429":
+          description: GitHub API rate limit exceeded
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "500":
-          description: Internal Server Error
+          description: internal server error
           schema:
-            type: string
+            additionalProperties:
+              type: string
+            type: object
+        "503":
+          description: processor service unavailable
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       summary: Get repository info
-  /subscriptions:
+  /api/subscriptions:
     get:
       description: Return all subscribed GitHub repositories
       responses:
@@ -89,14 +126,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/repo-stat_api_internal_dto.SubscriptionResponse'
+              $ref: '#/definitions/repo-watcher_api_internal_controller_http_dto.SubscriptionResponse'
             type: array
         "500":
-          description: Internal Server Error
+          description: internal server error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/repo-watcher_api_internal_controller_http_dto.ErrorResponse'
       summary: Get current subscription list
     post:
       description: Subscribe to receive information about the GitHub repository
@@ -112,21 +147,29 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/repo-stat_api_internal_dto.SubscriptionResponse'
+            $ref: '#/definitions/repo-watcher_api_internal_controller_http_dto.SubscriptionResponse'
         "400":
-          description: Bad Request
+          description: invalid or missing url
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/repo-watcher_api_internal_controller_http_dto.ErrorResponse'
+        "404":
+          description: repository not found on GitHub
+          schema:
+            $ref: '#/definitions/repo-watcher_api_internal_controller_http_dto.ErrorResponse'
+        "409":
+          description: already subscribed
+          schema:
+            $ref: '#/definitions/repo-watcher_api_internal_controller_http_dto.ErrorResponse'
+        "429":
+          description: GitHub API rate limit exceeded
+          schema:
+            $ref: '#/definitions/repo-watcher_api_internal_controller_http_dto.ErrorResponse'
         "500":
-          description: Internal Server Error
+          description: internal server error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/repo-watcher_api_internal_controller_http_dto.ErrorResponse'
       summary: Subscribe to the repository
-  /subscriptions/{owner}/{repo}:
+  /api/subscriptions/{owner}/{repo}:
     delete:
       description: Remove subscription for GitHub repository
       parameters:
@@ -144,22 +187,23 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
+            additionalProperties:
+              type: string
             type: object
         "400":
-          description: Bad Request
+          description: missing owner or repo
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/repo-watcher_api_internal_controller_http_dto.ErrorResponse'
+        "404":
+          description: subscription not found
+          schema:
+            $ref: '#/definitions/repo-watcher_api_internal_controller_http_dto.ErrorResponse'
         "500":
-          description: Internal Server Error
+          description: internal server error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/repo-watcher_api_internal_controller_http_dto.ErrorResponse'
       summary: Unsubscribe from the repository
-  /subscriptions/info:
+  /api/subscriptions/info:
     get:
       description: Retrieve aggregated information for all subscribed repositories
       responses:
@@ -167,13 +211,11 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/repo-stat_api_internal_dto.RepoInfoResponse'
+              $ref: '#/definitions/repo-watcher_api_internal_controller_http_dto.RepoInfoResponse'
             type: array
         "500":
-          description: Internal Server Error
+          description: internal server error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/repo-watcher_api_internal_controller_http_dto.ErrorResponse'
       summary: Get subscribed repositories info
 swagger: "2.0"

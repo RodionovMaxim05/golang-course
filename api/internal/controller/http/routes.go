@@ -8,6 +8,8 @@ import (
 	"repo-watcher/api/internal/usecase"
 )
 
+// AddRoutes registers all API routes on mux and wraps the result with
+// the rate-limiting and panic-recovery middleware.
 func AddRoutes(
 	mux *http.ServeMux,
 	log *slog.Logger,
@@ -27,5 +29,6 @@ func AddRoutes(
 	mux.Handle("DELETE /api/subscriptions/{owner}/{repo}", NewUnsubscribeHandler(log, unsubscribe))
 	mux.Handle("/swagger/", SwaggerHandler())
 
-	return middleware.RateLimit(rateLimiter, log)(mux)
+	handler := middleware.RateLimit(rateLimiter, log)(mux)
+	return middleware.Recover(log)(handler)
 }
