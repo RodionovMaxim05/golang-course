@@ -118,7 +118,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 
 	if err := run(ctx); err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, err)
+		fmt.Fprintln(os.Stderr, err)
 		cancel()
 		os.Exit(1)
 	}
