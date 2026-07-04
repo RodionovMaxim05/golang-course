@@ -30,6 +30,9 @@ func NewGetSubscriptionsInfoUsecase(log *slog.Logger, subscriberClient Subscribe
 	}
 }
 
+// Execute fetches all active subscriptions and publishes a collection
+// task for each one. Failures to publish an individual task are logged
+// and do not prevent processing of the remaining subscriptions.
 func (gsiu *GetSubscriptionsInfoUsecase) Execute(ctx context.Context) error {
 	// Get subscriptions from subscriber service
 	subscriptions, err := gsiu.subscriberClient.GetSubscriptions(ctx)
@@ -40,7 +43,7 @@ func (gsiu *GetSubscriptionsInfoUsecase) Execute(ctx context.Context) error {
 
 	// Submit a request to receive subscription data
 	for _, sub := range subscriptions {
-		err = gsiu.taskProducer.SendCollectionTask(ctx, sub.Owner, sub.Repo)
+		err := gsiu.taskProducer.SendCollectionTask(ctx, sub.Owner, sub.Repo)
 		if err != nil {
 			gsiu.log.Error("failed to publish collection task to producer",
 				"owner", sub.Owner,

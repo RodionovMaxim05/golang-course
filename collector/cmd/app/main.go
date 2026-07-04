@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/signal"
 	"sync"
-	"time"
 
 	"github.com/segmentio/kafka-go"
 
@@ -16,6 +15,7 @@ import (
 	kafkaAdapter "repo-watcher/collector/internal/adapter/kafka"
 	"repo-watcher/collector/internal/adapter/subscriber"
 	kafkaController "repo-watcher/collector/internal/controller/kafka"
+	"repo-watcher/collector/internal/controller/scheduler"
 	"repo-watcher/collector/internal/usecase"
 	"repo-watcher/platform/logger"
 )
@@ -40,6 +40,11 @@ func run(ctx context.Context) error {
 		log.Error("cannot init subscriber adapter", "error", err)
 		return err
 	}
+	defer func() {
+		if err := subscriberClient.Close(); err != nil {
+			log.Error("failed to close subscriber client", "error", err)
+		}
+	}()
 
 	// kafka result producer client
 	resultProducerClient := kafkaAdapter.NewResultProducerAdapter(cfg.Kafka, log)
@@ -70,10 +75,19 @@ func run(ctx context.Context) error {
 		}
 	}()
 
-	// usecases & controllers
-	getRepoUsecase := usecase.NewRepoUsecase(githubClient)
+	// usecases
+
+	getRepoUsecase := usecase.NewGetRepoUsecase(githubClient)
 	getSubscriptionsInfoUsecase := usecase.NewGetSubscriptionsInfoUsecase(log, subscriberClient, taskProducerAdapter)
+
+	// controllers
+
 	kafkaHandler := kafkaController.NewRepoWorker(log, tasksReader, getRepoUsecase, resultProducerClient)
+	subscriptionUpdater := scheduler.NewSubscriptionUpdater(
+		log,
+		cfg.SubscriptionUpdater.Interval,
+		getSubscriptionsInfoUsecase.Execute,
+	)
 
 	var wg sync.WaitGroup
 
@@ -87,23 +101,7 @@ func run(ctx context.Context) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		ticker := time.NewTicker(15 * time.Second)
-		defer ticker.Stop()
-
-		log.Info("background subscription updater ticker started (15s)")
-
-		for {
-			select {
-			case <-ctx.Done():
-				log.Info("background subscription updater ticker stopped")
-				return
-			case <-ticker.C:
-				log.Debug("ticker triggered: updating subscriptions...")
-				if err := getSubscriptionsInfoUsecase.Execute(ctx); err != nil {
-					log.Error("failed to update subscriptions in background", "error", err)
-				}
-			}
-		}
+		subscriptionUpdater.Start(ctx)
 	}()
 
 	<-ctx.Done()
