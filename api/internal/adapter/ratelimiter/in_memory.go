@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"golang.org/x/time/rate"
@@ -13,7 +14,7 @@ import (
 
 type entry struct {
 	limiter  *rate.Limiter
-	lastSeen time.Time
+	lastSeen atomic.Int64
 }
 
 type InMemoryRateLimiter struct {
@@ -37,13 +38,15 @@ func NewInMemoryRateLimiter(cfg config.RateLimit, log *slog.Logger) *InMemoryRat
 	}
 }
 
+// Allow checks whether a request for the given key is allowed under its
+// token bucket limiter, creating a new limiter on first use.
 func (imrl *InMemoryRateLimiter) Allow(_ context.Context, key string) (bool, float64, error) {
 	imrl.mu.RLock()
 	e, exists := imrl.limiters[key]
 	imrl.mu.RUnlock()
 
 	if exists {
-		e.lastSeen = time.Now()
+		e.lastSeen.Store(time.Now().UnixNano())
 		return allowResult(e.limiter)
 	}
 
@@ -51,18 +54,17 @@ func (imrl *InMemoryRateLimiter) Allow(_ context.Context, key string) (bool, flo
 	defer imrl.mu.Unlock()
 
 	if e, exists = imrl.limiters[key]; exists {
-		e.lastSeen = time.Now()
+		e.lastSeen.Store(time.Now().UnixNano())
 		return allowResult(e.limiter)
 	}
 
-	imrl.limiters[key] = &entry{
-		limiter:  rate.NewLimiter(imrl.rate, imrl.burst),
-		lastSeen: time.Now(),
-	}
+	newEntry := &entry{limiter: rate.NewLimiter(imrl.rate, imrl.burst)}
+	newEntry.lastSeen.Store(time.Now().UnixNano())
+	imrl.limiters[key] = newEntry
 
 	imrl.cleanupSample()
 
-	return allowResult(e.limiter)
+	return allowResult(newEntry.limiter)
 }
 
 func allowResult(l *rate.Limiter) (bool, float64, error) {
@@ -71,12 +73,14 @@ func allowResult(l *rate.Limiter) (bool, float64, error) {
 	return allowed, remaining, nil
 }
 
+// cleanupSample opportunistically evicts a bounded sample of stale
+// entries (unused for longer than the configured TTL) to bound memory
+// growth without scanning the entire map on every request.
 func (imrl *InMemoryRateLimiter) cleanupSample() {
 	if len(imrl.limiters) == 0 {
 		return
 	}
 
-	now := time.Now()
 	checked := 0
 
 	// Map iteration in Go is randomized
@@ -86,7 +90,7 @@ func (imrl *InMemoryRateLimiter) cleanupSample() {
 		}
 		checked++
 
-		if now.Sub(e.lastSeen) > imrl.ttl {
+		if time.Since(time.Unix(0, e.lastSeen.Load())) > imrl.ttl {
 			delete(imrl.limiters, key)
 		}
 	}

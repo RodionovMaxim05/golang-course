@@ -11,15 +11,16 @@ type RepoGetter interface {
 }
 
 type GetRepo struct {
-	repoGetter RepoGetter
+	client RepoGetter
 }
 
-func NewGetRepo(repoGetter RepoGetter) *GetRepo {
+func NewGetRepo(client RepoGetter) *GetRepo {
 	return &GetRepo{
-		repoGetter: repoGetter,
+		client: client,
 	}
 }
 
+// Execute fetches repository information for the given owner/repo.
 func (gr *GetRepo) Execute(ctx context.Context, owner, repo string) (domain.Repository, error) {
-	return gr.repoGetter.GetRepo(ctx, owner, repo)
+	return gr.client.GetRepo(ctx, owner, repo)
 }

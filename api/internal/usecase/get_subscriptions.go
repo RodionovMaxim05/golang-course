@@ -6,20 +6,21 @@ import (
 	"repo-watcher/api/internal/domain"
 )
 
-type SubscriptionsGetter interface {
+type SubscriptionLister interface {
 	GetSubscriptions(ctx context.Context) ([]domain.Subscription, error)
 }
 
 type GetSubscriptions struct {
-	subscriberClient SubscriptionsGetter
+	client SubscriptionLister
 }
 
-func NewGetSubscriptions(subscriber SubscriptionsGetter) *GetSubscriptions {
+func NewGetSubscriptions(client SubscriptionLister) *GetSubscriptions {
 	return &GetSubscriptions{
-		subscriberClient: subscriber,
+		client: client,
 	}
 }
 
-func (gS *GetSubscriptions) Execute(ctx context.Context) ([]domain.Subscription, error) {
-	return gS.subscriberClient.GetSubscriptions(ctx)
+// Execute returns all currently active subscriptions.
+func (gs *GetSubscriptions) Execute(ctx context.Context) ([]domain.Subscription, error) {
+	return gs.client.GetSubscriptions(ctx)
 }

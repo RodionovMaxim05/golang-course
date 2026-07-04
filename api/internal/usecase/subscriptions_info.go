@@ -11,15 +11,16 @@ type SubscriptionsInfoGetter interface {
 }
 
 type GetSubscriptionsInfo struct {
-	subsInfoGetter SubscriptionsInfoGetter
+	client SubscriptionsInfoGetter
 }
 
-func NewGetSubscriptionsInfo(subsInfoGetter SubscriptionsInfoGetter) *GetSubscriptionsInfo {
+func NewGetSubscriptionsInfo(client SubscriptionsInfoGetter) *GetSubscriptionsInfo {
 	return &GetSubscriptionsInfo{
-		subsInfoGetter: subsInfoGetter,
+		client: client,
 	}
 }
 
+// Execute returns aggregated repository metrics for all subscriptions.
 func (gsi *GetSubscriptionsInfo) Execute(ctx context.Context) ([]domain.Repository, error) {
-	return gsi.subsInfoGetter.GetSubscriptionsInfo(ctx)
+	return gsi.client.GetSubscriptionsInfo(ctx)
 }

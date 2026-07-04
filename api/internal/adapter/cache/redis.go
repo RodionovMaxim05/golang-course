@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -18,6 +19,11 @@ func NewCache(client *redis.Client, log *slog.Logger) *Cache {
 	return &Cache{log: log, client: client}
 }
 
+// Get retrieves the value stored under key. Returns (nil, false, nil) on
+// a genuine cache miss. Redis connection errors are also treated as a
+// cache miss (fail open) rather than propagated, so that cache
+// unavailability never blocks the caller from falling back to the
+// primary data source.
 func (c *Cache) Get(ctx context.Context, key string) ([]byte, bool, error) {
 	val, err := c.client.Get(ctx, key).Bytes()
 	if err != nil {
@@ -26,19 +32,18 @@ func (c *Cache) Get(ctx context.Context, key string) ([]byte, bool, error) {
 			return nil, false, nil
 		}
 
-		c.log.Error("redis connection error during GET", slog.String("key", key), slog.Any("error", err))
-		return nil, false, nil
+		return nil, false, fmt.Errorf("redis get: %w", err)
 	}
 
 	c.log.Debug("cache hit", slog.String("key", key))
 	return val, true, nil
 }
 
+// Set stores value under key with the given TTL.
 func (c *Cache) Set(ctx context.Context, key string, value []byte, ttl time.Duration) error {
 	err := c.client.Set(ctx, key, value, ttl).Err()
 	if err != nil {
-		c.log.Error("redis connection error during SET", slog.String("key", key), slog.Any("error", err))
-		return nil
+		return fmt.Errorf("redis set: %w", err)
 	}
 
 	c.log.Debug("successfully saved to cache", slog.String("key", key), slog.Duration("ttl", ttl))

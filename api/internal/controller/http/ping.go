@@ -1,11 +1,11 @@
 package http
 
 import (
-	"encoding/json"
 	"log/slog"
 	"net/http"
 
-	"repo-watcher/api/internal/dto"
+	"repo-watcher/api/internal/controller/http/dto"
+	"repo-watcher/api/internal/domain"
 	"repo-watcher/api/internal/usecase"
 )
 
@@ -17,36 +17,22 @@ import (
 // @Router /api/ping [get]
 func NewPingHandler(log *slog.Logger, ping *usecase.Ping) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		subscriberStatus, processorStatus := ping.Execute(r.Context())
-
-		services := []dto.ServiceStatus{
-			{Name: "processor", Status: string(processorStatus)},
-			{Name: "subscriber", Status: string(subscriberStatus)},
-		}
+		pingResult := ping.Execute(r.Context())
 
 		globalStatus := "ok"
 		statusCode := http.StatusOK
-
-		for _, s := range services {
-			if s.Status == "down" {
-				globalStatus = "degraded"
-				statusCode = http.StatusServiceUnavailable
-				break
-			}
+		if pingResult.Processor == domain.PingStatusDown || pingResult.Subscriber == domain.PingStatusDown {
+			globalStatus = "degraded"
+			statusCode = http.StatusServiceUnavailable
 		}
 
-		log.Info("ping request processed", "status", globalStatus, "processor", processorStatus, "subscriber", subscriberStatus)
-
-		response := dto.PingResponse{
-			Status:   globalStatus,
-			Services: services,
+		services := []dto.ServiceStatus{
+			{Name: "processor", Status: string(pingResult.Processor)},
+			{Name: "subscriber", Status: string(pingResult.Subscriber)},
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
+		log.Info("ping request processed", "status", globalStatus, "processor", pingResult.Processor, "subscriber", pingResult.Subscriber)
 
-		if err := json.NewEncoder(w).Encode(response); err != nil {
-			log.Error("failed to write ping response", "error", err)
-		}
+		writeJSON(w, log, statusCode, dto.PingResponse{Status: globalStatus, Services: services})
 	}
 }

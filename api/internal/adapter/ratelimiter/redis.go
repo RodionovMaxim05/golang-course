@@ -104,7 +104,6 @@ func (rrl *RedisRateLimiter) ensureScriptLoaded(ctx context.Context) {
 }
 
 // Allow checks if a request should be allowed for the given key.
-//
 // It atomically checks and updates the token bucket state in Redis.
 // Returns whether the request is allowed, the number of remaining tokens,
 // and any error encountered.

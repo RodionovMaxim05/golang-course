@@ -8,6 +8,8 @@ import (
 	"repo-watcher/api/internal/usecase"
 )
 
+// NewHandler builds the complete HTTP handler for the API gateway,
+// wiring all routes and the rate-limiting middleware.
 func NewHandler(
 	log *slog.Logger,
 	rateLimiter middleware.RateLimiter,

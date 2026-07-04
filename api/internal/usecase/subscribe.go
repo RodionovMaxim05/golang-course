@@ -6,20 +6,21 @@ import (
 	"repo-watcher/api/internal/domain"
 )
 
-type Subscriber interface {
+type SubscriptionCreator interface {
 	Subscribe(ctx context.Context, owner, repo string) (*domain.Subscription, error)
 }
 
 type Subscribe struct {
-	subscriber Subscriber
+	client SubscriptionCreator
 }
 
-func NewSubscriber(subscriber Subscriber) *Subscribe {
+func NewSubscriber(client SubscriptionCreator) *Subscribe {
 	return &Subscribe{
-		subscriber: subscriber,
+		client: client,
 	}
 }
 
+// Execute creates a new subscription for the given owner/repo.
 func (s *Subscribe) Execute(ctx context.Context, owner, repo string) (*domain.Subscription, error) {
-	return s.subscriber.Subscribe(ctx, owner, repo)
+	return s.client.Subscribe(ctx, owner, repo)
 }
