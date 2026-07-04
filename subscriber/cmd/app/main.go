@@ -39,15 +39,17 @@ func run(ctx context.Context) error {
 	}
 	defer db.Close()
 
-	// handlers
+	// adapters
 	githubClient := github.NewGitHubClient(cfg.GitHub, log)
 	subscriptionRepo := postgres.NewSubscriptionRepository(db)
 
+	// usecases
 	pingUseCase := usecase.NewPing()
-	subscribeUseCase := usecase.NewSubscriptionService(githubClient, subscriptionRepo)
+	subscribeUseCase := usecase.NewSubscribe(githubClient, subscriptionRepo)
 	unsubscribeUseCase := usecase.NewUnsubscribe(subscriptionRepo)
 	getSubsUseCase := usecase.NewGetSubscriptions(subscriptionRepo)
 
+	// handlers
 	grpcHandler := grpc.NewServer(
 		log,
 		pingUseCase,

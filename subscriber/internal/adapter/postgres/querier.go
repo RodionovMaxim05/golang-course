@@ -9,9 +9,8 @@ import (
 )
 
 type Querier interface {
-	CheckSubscriptionExists(ctx context.Context, arg CheckSubscriptionExistsParams) (bool, error)
 	CreateSubscription(ctx context.Context, arg CreateSubscriptionParams) (Subscription, error)
-	DeleteSubscription(ctx context.Context, arg DeleteSubscriptionParams) error
+	DeleteSubscription(ctx context.Context, arg DeleteSubscriptionParams) (int64, error)
 	ListSubscriptions(ctx context.Context) ([]Subscription, error)
 }
 

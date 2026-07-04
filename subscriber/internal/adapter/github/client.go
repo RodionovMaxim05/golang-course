@@ -26,6 +26,7 @@ func NewGitHubClient(cfg Config, log *slog.Logger) *GitHubClient {
 	}
 }
 
+// RepoExists reports whether the given owner/repo exists on GitHub.
 func (gc *GitHubClient) RepoExists(ctx context.Context, owner, repo string) (bool, error) {
 	url := fmt.Sprintf("https://api.github.com/repos/%s/%s", owner, repo)
 	gc.log.Debug("fetching repository from github", "owner", owner, "repo", repo, "url", url)
@@ -53,7 +54,7 @@ func (gc *GitHubClient) RepoExists(ctx context.Context, owner, repo string) (boo
 	case http.StatusNotFound:
 		gc.log.Warn("repository not found in github", "status_code", resp.StatusCode)
 		return false, domain.ErrRepoNotFound
-	case http.StatusForbidden:
+	case http.StatusForbidden, http.StatusTooManyRequests:
 		gc.log.Warn("github rate limit exceeded", "status_code", resp.StatusCode)
 		return false, domain.ErrRateLimited
 	default:

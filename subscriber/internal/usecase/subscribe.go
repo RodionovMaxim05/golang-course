@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"repo-watcher/subscriber/internal/domain"
@@ -11,16 +12,24 @@ type GitHubChecker interface {
 	RepoExists(ctx context.Context, owner, repo string) (bool, error)
 }
 
-type Subscribe struct {
-	githubClient GitHubChecker
-	repo         domain.SubscriptionRepository
+type SubscriptionInteractor interface {
+	Create(ctx context.Context, sub *domain.Subscription) (*domain.SubscriptionRecord, error)
 }
 
-func NewSubscriptionService(githubClient GitHubChecker, repository domain.SubscriptionRepository) *Subscribe {
+type Subscribe struct {
+	githubClient GitHubChecker
+	repo         SubscriptionInteractor
+}
+
+func NewSubscribe(githubClient GitHubChecker, repository SubscriptionInteractor) *Subscribe {
 	return &Subscribe{githubClient: githubClient, repo: repository}
 }
 
-func (s *Subscribe) Execute(ctx context.Context, owner, repo string) (*domain.SubscriptionResponse, error) {
+// Execute verifies that owner/repo exists on GitHub and creates a new
+// subscription for it. Returns domain.ErrRepoNotFound if the repository
+// doesn't exist on GitHub, or domain.ErrAlreadySubscribed if a
+// subscription already exists.
+func (s *Subscribe) Execute(ctx context.Context, owner, repo string) (*domain.SubscriptionRecord, error) {
 	// Check if repository exists on GitHub
 	exists, err := s.githubClient.RepoExists(ctx, owner, repo)
 	if err != nil {
@@ -30,16 +39,15 @@ func (s *Subscribe) Execute(ctx context.Context, owner, repo string) (*domain.Su
 		return nil, domain.ErrRepoNotFound
 	}
 
-	// Check if already subscribed
-	alreadySubscribed, err := s.repo.Exists(ctx, owner, repo)
+	sub := &domain.Subscription{Owner: owner, Repo: repo}
+
+	resp, err := s.repo.Create(ctx, sub)
 	if err != nil {
-		return nil, fmt.Errorf("check subscription: %w", err)
-	}
-	if alreadySubscribed {
-		return nil, domain.ErrAlreadySubscribed
+		if errors.Is(err, domain.ErrAlreadySubscribed) {
+			return nil, err
+		}
+		return nil, fmt.Errorf("create subscription: %w", err)
 	}
 
-	subscription := &domain.Subscription{Owner: owner, Repo: repo}
-
-	return s.repo.Create(ctx, subscription)
+	return resp, nil
 }

@@ -9,6 +9,9 @@ import (
 	"repo-watcher/subscriber/internal/domain"
 )
 
+// grpcError translates a domain error returned by a use case into the
+// appropriate gRPC status code. Errors not recognized as one of the known
+// domain sentinel errors default to codes.Internal.
 func grpcError(err error) error {
 	switch {
 	case errors.Is(err, domain.ErrInvalidArgument):
