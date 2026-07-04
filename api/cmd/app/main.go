@@ -44,6 +44,12 @@ func run(ctx context.Context) error {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr: cfg.Redis.Address,
 	})
+	defer func() {
+		if err := redisClient.Close(); err != nil {
+			log.Error("failed to close redis client", "error", err)
+		}
+	}()
+
 	redisCache := cache.NewCache(redisClient, log)
 	redisRateLimiter := ratelimiter.NewRedisRateLimiter(redisClient, cfg.RateLimit, log)
 
@@ -56,12 +62,22 @@ func run(ctx context.Context) error {
 		log.Error("cannot init subscriber adapter", "error", err)
 		return err
 	}
+	defer func() {
+		if err := subscriberClient.Close(); err != nil {
+			log.Error("failed to close subscriber client", "error", err)
+		}
+	}()
 
 	processorClient, err := processor.NewClient(cfg.Services.Processor, redisCache, cfg.Cache.TTL, log)
 	if err != nil {
 		log.Error("cannot init processor adapter", "error", err)
 		return err
 	}
+	defer func() {
+		if err := processorClient.Close(); err != nil {
+			log.Error("failed to close processor client", "error", err)
+		}
+	}()
 
 	// usercases
 
@@ -89,11 +105,9 @@ func run(ctx context.Context) error {
 func main() {
 	ctx := context.Background()
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
+
 	if err := run(ctx); err != nil {
-		_, err = fmt.Fprintln(os.Stderr, err)
-		if err != nil {
-			fmt.Printf("launching server error: %s\n", err)
-		}
+		fmt.Fprintln(os.Stderr, err)
 		cancel()
 		os.Exit(1)
 	}
