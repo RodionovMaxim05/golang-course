@@ -61,6 +61,7 @@ services:
       interval: 2s
       timeout: 5s
       retries: 10
+      start_period: 10s
 
   postgres_proc:
     image: postgres:17-alpine
@@ -79,6 +80,7 @@ services:
       interval: 2s
       timeout: 5s
       retries: 10
+      start_period: 10s
 
   migrate_sub:
     image: migrate/migrate
