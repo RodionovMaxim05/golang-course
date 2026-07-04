@@ -7,6 +7,9 @@ import (
 	commonpb "repo-watcher/proto/gen/go/common/v1"
 )
 
+// mapDomainErrorToCode translates a domain error returned by the GitHub
+// client into a wire-level commonpb.ErrorCode understood by the Processor.
+// Unrecognized errors map to ERROR_CODE_INTERNAL_COLLECTOR_ERROR.
 func mapDomainErrorToCode(err error) commonpb.ErrorCode {
 	switch {
 	case errors.Is(err, domain.ErrNotFound):

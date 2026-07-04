@@ -27,6 +27,7 @@ func NewGitHubClient(cfg Config, log *slog.Logger) *GitHubClient {
 	}
 }
 
+// RepoInfo is the wire format returned by the GitHub REST API.
 type RepoInfo struct {
 	FullName        string    `json:"full_name"`
 	Description     string    `json:"description"`
@@ -35,6 +36,7 @@ type RepoInfo struct {
 	CreatedAt       time.Time `json:"created_at"`
 }
 
+// GetRepo fetches repository metrics for the given owner/repo from the GitHub API.
 func (gc *GitHubClient) GetRepo(ctx context.Context, owner, repo string) (domain.Repository, error) {
 	url := fmt.Sprintf("https://api.github.com/repos/%s/%s", owner, repo)
 	gc.log.Debug("fetching repository from github", "owner", owner, "repo", repo, "url", url)
@@ -77,6 +79,8 @@ func (gc *GitHubClient) GetRepo(ctx context.Context, owner, repo string) (domain
 	}, nil
 }
 
+// checkStatus maps a GitHub API HTTP response status code to a domain
+// error, or nil for a successful (200 OK) response.
 func (gc *GitHubClient) checkStatus(resp *http.Response) error {
 	switch resp.StatusCode {
 	case http.StatusOK:
@@ -84,7 +88,7 @@ func (gc *GitHubClient) checkStatus(resp *http.Response) error {
 	case http.StatusNotFound:
 		gc.log.Warn("repository not found in github", "status_code", resp.StatusCode)
 		return domain.ErrNotFound
-	case http.StatusForbidden:
+	case http.StatusForbidden, http.StatusTooManyRequests:
 		gc.log.Warn("github rate limit exceeded", "status_code", resp.StatusCode)
 		return domain.ErrRateLimited
 	default:

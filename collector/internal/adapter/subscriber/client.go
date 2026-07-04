@@ -14,6 +14,7 @@ import (
 type SubscriberClient struct {
 	log    *slog.Logger
 	client subscriberpb.SubscriberClient
+	conn   *grpc.ClientConn
 }
 
 func NewSubscriberClient(address string, log *slog.Logger) (*SubscriberClient, error) {
@@ -22,9 +23,15 @@ func NewSubscriberClient(address string, log *slog.Logger) (*SubscriberClient, e
 		return nil, err
 	}
 
-	return &SubscriberClient{log: log, client: subscriberpb.NewSubscriberClient(conn)}, nil
+	return &SubscriberClient{
+		log:    log,
+		client: subscriberpb.NewSubscriberClient(conn),
+		conn:   conn,
+	}, nil
 }
 
+// GetSubscriptions retrieves the full list of currently active
+// subscriptions from the Subscriber service.
 func (sc *SubscriberClient) GetSubscriptions(ctx context.Context) ([]domain.Subscription, error) {
 	sc.log.Debug("fetching subscriptions from subscriber service")
 
@@ -44,4 +51,8 @@ func (sc *SubscriberClient) GetSubscriptions(ctx context.Context) ([]domain.Subs
 	}
 
 	return subscriptions, nil
+}
+
+func (sc *SubscriberClient) Close() error {
+	return sc.conn.Close()
 }

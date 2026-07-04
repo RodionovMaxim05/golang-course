@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	"github.com/segmentio/kafka-go"
@@ -28,24 +29,21 @@ func NewTaskProducerAdapter(cfg config.Kafka, log *slog.Logger) *TaskProducerAda
 	}
 }
 
+// SendCollectionTask publishes a request to collect data for the given owner/repo.
 func (tpa *TaskProducerAdapter) SendCollectionTask(ctx context.Context, owner, repo string) error {
 	getRepoRequest := &collectorpb.CollectRepoCmd{
 		Owner: owner,
 		Repo:  repo,
 	}
 
-	tpa.log.Debug("task producer get request")
-
 	requestBytes, err := proto.Marshal(getRepoRequest)
 	if err != nil {
-		tpa.log.Error("failed to Marshal get repo request", "error", err)
-		return err
+		return fmt.Errorf("marshal collection task: %w", err)
 	}
 
 	err = tpa.writer.WriteMessages(ctx, kafka.Message{Value: requestBytes})
 	if err != nil {
-		tpa.log.Error("failed to write messages in Kafka", "error", err)
-		return err
+		return fmt.Errorf("write collection task to kafka: %w", err)
 	}
 
 	tpa.log.Debug("task producer send request", "owner", owner, "repo", repo)

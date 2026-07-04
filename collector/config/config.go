@@ -1,6 +1,8 @@
 package config
 
 import (
+	"time"
+
 	"repo-watcher/collector/internal/adapter/github"
 	"repo-watcher/platform/env"
 	"repo-watcher/platform/grpcserver"
@@ -22,13 +24,18 @@ type Kafka struct {
 	GroupID       string `yaml:"group_id"       env:"KAFKA_GROUP_ID"       env-default:"default-group"`
 }
 
+type SubscriptionUpdater struct {
+	Interval time.Duration `yaml:"interval" env:"SUBSCRIPTION_UPDATER_INTERVAL" env-default:"15s"`
+}
+
 type Config struct {
-	App      App               `yaml:"app"`
-	GitHub   github.Config     `yaml:"github"`
-	Services Services          `yaml:"services"`
-	GRPC     grpcserver.Config `yaml:"grpc"`
-	Logger   logger.Config     `yaml:"logger"`
-	Kafka    Kafka             `yaml:"kafka"`
+	App                 App                 `yaml:"app"`
+	GitHub              github.Config       `yaml:"github"`
+	Services            Services            `yaml:"services"`
+	GRPC                grpcserver.Config   `yaml:"grpc"`
+	Kafka               Kafka               `yaml:"kafka"`
+	SubscriptionUpdater SubscriptionUpdater `yaml:"subscription_updater"`
+	Logger              logger.Config       `yaml:"logger"`
 }
 
 func MustLoad(path string) Config {
