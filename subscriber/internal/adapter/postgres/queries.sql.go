@@ -9,31 +9,13 @@ import (
 	"context"
 )
 
-const checkSubscriptionExists = `-- name: CheckSubscriptionExists :one
-SELECT EXISTS (
-        SELECT 1
-        FROM subscriptions
-        WHERE owner = $1
-            AND repo = $2
-    )
-`
-
-type CheckSubscriptionExistsParams struct {
-	Owner string
-	Repo  string
-}
-
-func (q *Queries) CheckSubscriptionExists(ctx context.Context, arg CheckSubscriptionExistsParams) (bool, error) {
-	row := q.db.QueryRow(ctx, checkSubscriptionExists, arg.Owner, arg.Repo)
-	var exists bool
-	err := row.Scan(&exists)
-	return exists, err
-}
-
 const createSubscription = `-- name: CreateSubscription :one
 INSERT INTO subscriptions (owner, repo)
 VALUES ($1, $2)
-RETURNING id, owner, repo, created_at
+RETURNING id,
+    owner,
+    repo,
+    created_at
 `
 
 type CreateSubscriptionParams struct {
@@ -53,7 +35,7 @@ func (q *Queries) CreateSubscription(ctx context.Context, arg CreateSubscription
 	return i, err
 }
 
-const deleteSubscription = `-- name: DeleteSubscription :exec
+const deleteSubscription = `-- name: DeleteSubscription :execrows
 DELETE FROM subscriptions
 WHERE owner = $1
     AND repo = $2
@@ -64,9 +46,12 @@ type DeleteSubscriptionParams struct {
 	Repo  string
 }
 
-func (q *Queries) DeleteSubscription(ctx context.Context, arg DeleteSubscriptionParams) error {
-	_, err := q.db.Exec(ctx, deleteSubscription, arg.Owner, arg.Repo)
-	return err
+func (q *Queries) DeleteSubscription(ctx context.Context, arg DeleteSubscriptionParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteSubscription, arg.Owner, arg.Repo)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const listSubscriptions = `-- name: ListSubscriptions :many

@@ -27,6 +27,8 @@ func NewServer(log *slog.Logger, ping *usecase.Ping, subscribe *usecase.Subscrib
 	}
 }
 
+// Ping is a liveness check endpoint, returning a static reply from the
+// underlying Ping use case.
 func (s *Server) Ping(ctx context.Context, _ *subscriberpb.PingRequest) (*subscriberpb.PingResponse, error) {
 	s.log.Debug("subscriber ping request received")
 
